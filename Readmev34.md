@@ -108,3 +108,9 @@ font-family: Tahoma, Verdana, Arial, sans-serif; }
 Besök websidan via serverns publika IP-address
 
 Reslutat: ![alt text](<nginx fixad.png>)
+
+## Challenge Cloud init automation konfiguration 
+
+Jag påbörjar en ny konfiguration av en virutell maskin efter jag har skapat en resursgrupp. Virtuell maskin konfigureras på samma sätt som vid tidigare moment. Under konfiguration navigerar jag till "Avancerat" där jag fyller i min "cloud.init.yaml" kod för att konfigurera vad maskinen ska göra vid uppstart
+
+![alt text](image-3.png)

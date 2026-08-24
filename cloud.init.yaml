@@ -1,0 +1,47 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - nginx
+
+write_files:
+  - path: /var/www/html/index.html
+    owner: www-data:www-data
+    permissions: '0644'
+    content: |
+      <!DOCTYPE html>
+      <html lang="sv">
+      <head>
+      <meta charset="UTF-8">
+      <title>Welcome to Novatrix</title>
+      <style>
+      html { color-scheme: light dark; }
+      body { width: 35em; margin: 0 auto; font-family: Tahoma, Verdana, Arial, sans-serif; padding: 20px; }
+      input, textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+      label { font-weight: bold; display: block; margin-top: 10px; }
+      input[type="submit"] { background-color: #003366; color: white; border: none; cursor: pointer; padding: 10px; margin-top: 15px; }
+      </style>
+      </head>
+      <body>
+      <h1>Welcome to Novatrix</h1>
+      <p>Fyll i formuläret nedan för att skapa ett ärende:</p>
+
+      <form>
+        <label for="name">Namn:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="mail">Mail:</label>
+        <input type="email" id="mail" name="mail" required>
+
+        <label for="msg">Meddelande:</label>
+        <textarea id="msg" name="msg" rows="4" required></textarea>
+
+        <input type="submit" value="Skicka">
+      </form>
+
+      </body>
+      </html>
+
+runcmd:
+  - systemctl restart nginx
+  - systemctl enable nginx
