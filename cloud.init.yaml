@@ -24,7 +24,6 @@ write_files:
       </head>
       <body>
       <h1>Welcome to Novatrix</h1>
-      <p>Fyll i formuläret nedan för att skapa ett ärende:</p>
 
       <form>
         <label for="name">Namn:</label>
