@@ -113,9 +113,32 @@ Reslutat: ![alt text](<nginx fixad.png>)
 
 Jag påbörjar en ny konfiguration av en virutell maskin efter jag har skapat en resursgrupp. Virtuell maskin konfigureras på samma sätt som vid tidigare moment. Under konfiguration navigerar jag till "Avancerat" där jag fyller i min "cloud.init.yaml" kod för att konfigurera vad maskinen ska göra vid uppstart. 
 
+Installation av uppdateringar samt nginx paketet:
+```
+package_update: true
+packages:
+  - nginx 
+  ```
+Konfiguration av HTML websidan. HTML kod efter "Content:" likt tidigare konfigurationen i driftsättniningen.
+  ```
+write_files:
+  - path: /var/www/html/index.html
+    owner: www-data:www-data
+    permissions: '0644'
+    content:
+  ```
+Omstart av server efter HTML konfiguration.
+```
+runcmd:
+  - systemctl restart nginx
+  - systemctl enable nginx
+  ```
+
+Ifyllt cloud.init script "Anpassad data"
 ![alt text](image-3.png)
 
 Verifiering: Efter HTTP port 80 öppnats besök den offentliga IP-addressen för maskinen för att verifiera att konfiguration efter cloud.init scriptet har fungerat. Samt anslut via SSH till den virtuella maskinen via terminalen.
 
 
 ![alt text](image-5.png)![alt text](image-6.png)
+![alt text](image-7.png)
