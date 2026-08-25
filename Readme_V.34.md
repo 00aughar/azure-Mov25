@@ -26,9 +26,9 @@ Port **80** för **(HTTP)** och **22** för **(SSH)** öppnad på VM via Azure P
 
 Resultat: 
 
-![alt text](image-1.png)
-![alt text](image.png)
-![alt text](image-2.png)
+![alt text](resursgrupp.png)
+![alt text](<vm resultat.png>)
+![alt text](Http-port.png)
 
 ## 2. SSH nyckel & anslutning till VM
 
@@ -135,13 +135,13 @@ runcmd:
   ```
 
 Ifyllt cloud.init script "Anpassad data"
-![alt text](image-3.png)
+![alt text](Cloud.init.png)
 
 Verifiering: Efter HTTP port 80 öppnats besök den offentliga IP-addressen för maskinen för att verifiera att konfiguration efter cloud.init scriptet har fungerat. Samt anslut via SSH till den virtuella maskinen via terminalen.
 
 
-![alt text](image-6.png)
-![alt text](image-7.png)
+![alt text](<cloudinit resultat.png>)
+![alt text](<verifiering cloudinit.png>)
 
 ## Challenge deploy.sh script - Automation av resursgrupp och provisionering av VM 
 
