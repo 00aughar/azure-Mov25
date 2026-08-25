@@ -20,7 +20,7 @@ Via Azure Portalen skapa resursgrupp **"rg-novatrix-V34"**.
 Provisionerat VM **"vm-novatrix-web"** skapad via Azure Portalen inom resursgrupp **"rg-novatrix-V34"**
 
 - VM har operativsystem **"Ubuntu Server LTS 24.04 - x64 Gen2"** 
-- Azure klassning på VM **"B2ats_v2"**
+- Maskinstorlek på VM **"B2ats_v2"**
 
 Port **80** för **(HTTP)** och **22** för **(SSH)** öppnad på VM via Azure Portalen för trafik
 
@@ -148,13 +148,13 @@ Verifiering: Efter HTTP port 80 öppnats besök den offentliga IP-addressen för
 Istället för att konfigurera resursgrupp, VM manuellt gjorde jag en automatisering av flödet via Azure CLI med ett deploy.sh script. Genom att köra scriptet byggs en komplett webbservermiljö utan manuella steg. Sciptet använder även tidigare cloud.init konfigurationen för att konfigurera uppstart av VMen, uppdateringar, nginx installation & uppbyggnad av html websidan.
 
 Scriptet delas i 5 olika delar:
-- 1. Variabler som definnerar den namn,geografisk plats,adminanvändare & azure klassning på resursgrupp & den virutella maskinens 
+- 1. Variabler som definnerar den namn,geografisk plats,adminanvändare & maskinstorlek på resursgrupp & den virutella maskinens 
 - 2. Skapandet av resursgruppen & bestämd geografisk plats
 - 3. Provisionering av Virutell maskin & cloud-init scriptet körs vid uppstart av VM
 - 4. Tillåter trafik på port 80 för HTTP åtkomst till webbserver
 - 5. Serverns publika IP adress för verifiering att webservern är igång
 
-deploy.sh scriptet körs i en bash terminal i Visual Studio Code som är ansluten via Azure CLI:
+deploy.sh-skriptet körs i Git Bash-terminalen i Visual Studio Code med en aktiv Azure CLI-anslutning:
 
 ```
 
