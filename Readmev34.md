@@ -109,7 +109,7 @@ Besök websidan via serverns publika IP-address
 
 Reslutat: ![alt text](<nginx fixad.png>)
 
-## Challenge Cloud init automation konfiguration 
+## Challenge Cloud-init konfiguration
 
 Jag påbörjar en ny konfiguration av en virutell maskin efter jag har skapat en resursgrupp. Virtuell maskin konfigureras på samma sätt som vid tidigare moment. Under konfiguration navigerar jag till "Avancerat" där jag fyller i min "cloud.init.yaml" kod för att konfigurera vad maskinen ska göra vid uppstart. 
 
@@ -140,5 +140,52 @@ Ifyllt cloud.init script "Anpassad data"
 Verifiering: Efter HTTP port 80 öppnats besök den offentliga IP-addressen för maskinen för att verifiera att konfiguration efter cloud.init scriptet har fungerat. Samt anslut via SSH till den virtuella maskinen via terminalen.
 
 
-![alt text](image-5.png)![alt text](image-6.png)
+![alt text](image-6.png)
 ![alt text](image-7.png)
+
+## Challenge deploy.sh script - Automation av resursgrupp och provisionering av VM 
+
+Istället för att konfigurera resursgrupp, VM manuellt gjorde jag en automatisering av flödet via Azure CLI med ett deploy.sh script. Genom att köra scriptet byggs en komplett webbservermiljö utan manuella steg. Sciptet använder även tidigare cloud.init konfigurationen för att konfigurera uppstart av VMen, uppdateringar, nginx installation & uppbyggnad av html websidan.
+
+deploy.sh scriptet körs i en bash terminal i Visual Studio Code som är ansluten via Azure CLI:
+
+```
+
+#!/bin/bash
+
+# --- Variabler ---
+RESOURCE_GROUP="rg-novatrix"
+LOCATION="swedencentral"
+VM_NAME="vm-novatrix-web"
+ADMIN_USER="azureuser"
+SKU="Standard_B2ats_v2"
+
+"1. Skapar resursgrupp: $RESOURCE_GROUP i $LOCATION"
+az group create \
+  --name $RESOURCE_GROUP \
+  --location $LOCATION
+
+"2. Skapar virtuell maskin ($VM_NAME) och kör cloud-init"
+az vm create \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --image Ubuntu2204 \
+  --size $SKU \
+  --admin-username $ADMIN_USER \
+  --generate-ssh-keys \
+  --custom-data cloud-init.yaml \
+  --public-ip-sku Standard
+
+"3. Öppnar port 80 (HTTP)"
+az vm open-port \
+  --port 80 \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME
+
+"4. Hämtar den publika IP-adressen"
+PUBLIC_IP=$(az vm list-ip-addresses \
+  --resource-group $RESOURCE_GROUP \
+  --name $VM_NAME \
+  --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" \
+  -o tsv)
+```
