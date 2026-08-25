@@ -25,9 +25,10 @@ az vm create \
 
 echo "3. Öppnar port 80 (HTTP) i Network Security Group..."
 az vm open-port \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$VM_NAME" \
   --port 80 \
-  --resource-group $RESOURCE_GROUP \
-  --name $VM_NAME
+  --priority 900
 
 echo "4. Hämtar den publika IP-adressen..."
 PUBLIC_IP=$(az vm list-ip-addresses \
@@ -35,3 +36,7 @@ PUBLIC_IP=$(az vm list-ip-addresses \
   --name $VM_NAME \
   --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" \
   -o tsv)
+
+echo "--------------------------------------------------"
+echo "Surfa till webbsidan här: http://$PUBLIC_IP"
+echo "--------------------------------------------------"

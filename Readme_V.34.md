@@ -4,7 +4,7 @@
 
 **August Hartwig** 
 **MOV25** 
-**20/8**
+**25/8**
 
 **Innehåll**
 - Resursgrupp och provisionerat VM
@@ -146,6 +146,13 @@ Verifiering: Efter HTTP port 80 öppnats besök den offentliga IP-addressen för
 ## Challenge deploy.sh script - Automation av resursgrupp och provisionering av VM 
 
 Istället för att konfigurera resursgrupp, VM manuellt gjorde jag en automatisering av flödet via Azure CLI med ett deploy.sh script. Genom att köra scriptet byggs en komplett webbservermiljö utan manuella steg. Sciptet använder även tidigare cloud.init konfigurationen för att konfigurera uppstart av VMen, uppdateringar, nginx installation & uppbyggnad av html websidan.
+
+Scriptet delas i 5 olika delar:
+- 1. Variabler som definnerar den namn,geografisk plats,adminanvändare & azure klassning på resursgrupp & den virutella maskinens 
+- 2. Skapandet av resursgruppen & bestämd geografisk plats
+- 3. Provisionering av Virutell maskin & cloud-init scriptet körs vid uppstart av VM
+- 4. Tillåter trafik på port 80 för HTTP åtkomst till webbserver
+- 5. Serverns publika IP adress för verifiering att webservern är igång
 
 deploy.sh scriptet körs i en bash terminal i Visual Studio Code som är ansluten via Azure CLI:
 
