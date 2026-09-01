@@ -20,8 +20,24 @@ Drift avdelningen har contributor behörighet på resursgrupp rg-novatrix. Motiv
 
 Utveckling avdelningen har reader behörighet på resursgrupp rg-novatrix. Motivering: Ser över miljön.
 
-4.
+![alt text](Rolltilldelningar.png)
+
+4. Verifiering RBAC
 
 1. Verifiering via Azure portalen. Gå till resursen i azure portalen och access control kontrollerar jag avdelningskontot för båda användarna. Där får jag en överblick på vilken rolltildening dem har och att dem tillhör grupptilldelningen.
 
+![alt text](<Kontroll utveckling.png>)
+![alt text](<Kontroll drift.png>)
+
 2. Verifiera via att gå in via kontot och testa så rolltildelningen tillämpas.
+
+![alt text](<erik starta VM test.png>)
+
+5. Skapa Managed Identity
+
+Skapad managed identity för kommande utveckling av Novatrix formulär applikation. Tilldelad till resursgrupp "rg-Novatrix"
+
+![alt text](<managed identity.png>)
+
+6. Challenge
+
