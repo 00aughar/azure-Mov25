@@ -8,34 +8,42 @@
 
 1. Skapa användare i Azure portalen via Entra.
 
-Användarkontona ämnade åt tjänsten/åtkomsten alltså inget vanligt användarkonto 
+Skapade dedikerade användarkonton i Microsoft Entra ID avsedda för rollbaserad testning och åtkomststyrning, i stället för att använda vanliga personliga konton.
 
 2. Skapa säkerhetsgrupp i azure portalen via Entra
+
+Skapade säkerhetsgrupperna Azure-Drift och Azure-Utveckling i Entra ID för att möjliggöra gruppbaserad behörighetsstyrning.
 
 3. RBAC, behörighet & scope
 
 Tilldela roll till säkerhetsgrupp och sätt scope på vilka resursgrupper som ska styras av medlemmarna. Tillämpa least privledge.
 
-Drift avdelningen har contributor behörighet på resursgrupp rg-novatrix. Motivering: bygger och sköter underhåll av miljön.
+- Drift *"Azure-Drift"* avdelningen har *Contributor* behörighet på resursgrupp *rg-novatrix*. Motivering: Ansvarar för drift, uppbyggnad och underhåll av infrastrukturen.
 
-Utveckling avdelningen har reader behörighet på resursgrupp rg-novatrix. Motivering: Ser över miljön.
+- Utveckling *"Azure-Utveckling"* avdelningen har *Reader* behörighet på resursgrupp *rg-novatrix*. Motivering: Behöver enbart insyn och möjlighet att övervaka miljön.
+
+Reslutat:
 
 ![alt text](Rolltilldelningar.png)
 
-4. Verifiering RBAC
+4. Verifiering av RBAC
 
 1. Verifiering via Azure portalen. Gå till resursen i azure portalen och access control kontrollerar jag avdelningskontot för båda användarna. Där får jag en överblick på vilken rolltildening dem har och att dem tillhör grupptilldelningen.
+
+Reslutat:
 
 ![alt text](<Kontroll utveckling.png>)
 ![alt text](<Kontroll drift.png>)
 
-2. Verifiera via att gå in via kontot och testa så rolltildelningen tillämpas.
+2. Loggade in med respektive konto för att verifiera att behörighetsbegränsningarna tillämpas i praktiken (t.ex. att start/stopp av VM nekas för utvecklarkontot men tillåts för driftkontot).
+
+Reslutat:
 
 ![alt text](<erik starta VM test.png>)
 
 5. Skapa Managed Identity
 
-Skapad managed identity för kommande utveckling av Novatrix formulär applikation. Tilldelad till resursgrupp "rg-Novatrix"
+Skapade en managed identity i resursgruppen *rg-novatrix*. Denna förbereds för framtida lösenordsfri autentisering mot Azure Storage i kommande utveckling av Novatrix formulärapplikation.
 
 ![alt text](<managed identity.png>)
 
@@ -87,6 +95,13 @@ az role assignment create \
   --role "Reader" \
   --scope "$RG_ID"
 ```
+
+Motviering till least privledge:
+
+- Rolltildelning via säkerhetsgrupper istället för användare gör att miljön blir enklare att skala upp i framtiden. Det blir säkrare och översynen blir tydligare. Börjar en ny medarbetare läggs denna till i säkerhetsgruppen som redan har tilldelats RBAC behörigheter. Slutar en användare tas den bort från gruppen och behörigheterna försvinner.
+- Behörighetsuppdelning baserat på avdelningens syfte och arbetsflöde. Exempelvis utvecklingsavdelningen *Novatrix-Utveckling* har endast *Reader* behörighet. Avdelningens syfte är inte underhåll av resurser utan utveckling av applikationer i verksamheten. *Novatrix-Drift* har *Contributor* behörighet då dem jobbar med underhåll av resurserna och behöver ha åtkomst till verktyg som starta & konfigurera resurser. 
+- Ingen av avdelningarna tilldelas *Owner*. Det begränsar skadeverkan betydligt om ett konto skulle bli komprometterat, eftersom en angripare inte kan dela ut nya rättigheter eller ta över hela tenanten.
+
 
 Resultat:
 ![alt text](<VG del tilldelning-1.png>)
