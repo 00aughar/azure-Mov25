@@ -4,19 +4,19 @@
 
 **August Hartwig** 
 **MOV25** 
-**x/x**
+**1/9**
 
-1. Skapa användare i Azure portalen via Entra.
+# 1. Skapa användare i Azure portalen via Entra.
 
 Skapade dedikerade användarkonton i Microsoft Entra ID avsedda för rollbaserad testning och åtkomststyrning, i stället för att använda vanliga personliga konton.
 
-2. Skapa säkerhetsgrupp i azure portalen via Entra
+# 2. Skapa säkerhetsgrupp i azure portalen via Entra
 
 Skapade säkerhetsgrupperna Azure-Drift och Azure-Utveckling i Entra ID för att möjliggöra gruppbaserad behörighetsstyrning.
 
-3. RBAC, behörighet & scope
+# 3. RBAC, behörighet & scope
 
-Tilldela roll till säkerhetsgrupp och sätt scope på vilka resursgrupper som ska styras av medlemmarna. Tillämpa least privledge.
+Tilldela roll till säkerhetsgrupp och sätt scope på vilka resursgrupper som ska styras av medlemmarna. Tillämpa least priviledge.
 
 - Drift *"Azure-Drift"* avdelningen har *Contributor* behörighet på resursgrupp *rg-novatrix*. Motivering: Ansvarar för drift, uppbyggnad och underhåll av infrastrukturen.
 
@@ -26,7 +26,7 @@ Reslutat:
 
 ![alt text](Rolltilldelningar.png)
 
-4. Verifiering av RBAC
+# 4. Verifiering av RBAC
 
 1. Verifiering via Azure portalen. Gå till resursen i azure portalen och access control kontrollerar jag avdelningskontot för båda användarna. Där får jag en överblick på vilken rolltildening dem har och att dem tillhör grupptilldelningen.
 
@@ -41,15 +41,17 @@ Reslutat:
 
 ![alt text](<erik starta VM test.png>)
 
-5. Skapa Managed Identity
+# 5. Skapa Managed Identity
 
 Skapade en managed identity i resursgruppen *rg-novatrix*. Denna förbereds för framtida lösenordsfri autentisering mot Azure Storage i kommande utveckling av Novatrix formulärapplikation.
 
 ![alt text](<managed identity.png>)
 
-6. Challenge
+# 6. Challenge
 
-Scriptet "rbac-novatrix.sh" automatiserar rolltildeningen (RBAC) för Novatrix miljön via Azure CLI. Med scriptet slipper jag bygga upp behörighetsstrukturen via manuella steg och gör att miljön blir repoducerbar. 
+Scriptet "rbac-novatrix.sh" automatiserar rolltildeningen (RBAC) för Novatrix miljön via Azure CLI. Med scriptet slipper jag bygga upp behörighetsstrukturen via manuella steg och gör att miljön blir repoducerbar.
+
+Scriptet förutsätter att konton & säkerhetsgrupper är skapade i Azure miljön sedan tidigare. Scriptet körs i en Azure CLI ansluten git bash terminal eller direkt via cloud shell genom Azure miljön.
 
 Scriptet delas upp i följande steg:
 
@@ -78,7 +80,7 @@ DEV_GROUP_ID=$(az ad group show --group "$DEV_GROUP" --query id -o tsv)
 
 4. RBAC tilldelning på resursgruppen *"rg-novatrix"*.
 
-- *Novatrix-Drift* tilldelas *Contributor* för att kunna utföra nödvändigt underhåll av resurserna i resursgruppen. Exemepelvis hantera, starta & konfigurera resurserna, men inte hantera andras behörigheter. Endast Owner får göra detta.
+- *Novatrix-Drift* tilldelas *Contributor* för att kunna utföra nödvändigt underhåll av resurserna i resursgruppen. Exempelvis hantera, starta & konfigurera resurserna, men inte hantera andras behörigheter. Endast Owner får göra detta.
 
 - *Novatrix-Utveckling* tilldelas *Reader* för att kunna granska statusen, nätverkskonfigurationen & loggar på resurserna utan att riskera att oavsiktliga ändringar eller driftstörningar görs. 
 
@@ -96,7 +98,7 @@ az role assignment create \
   --scope "$RG_ID"
 ```
 
-Motviering till least privledge:
+Motviering till least privledge modellen:
 
 - Rolltildelning via säkerhetsgrupper istället för användare gör att miljön blir enklare att skala upp i framtiden. Det blir säkrare och översynen blir tydligare. Börjar en ny medarbetare läggs denna till i säkerhetsgruppen som redan har tilldelats RBAC behörigheter. Slutar en användare tas den bort från gruppen och behörigheterna försvinner.
 - Behörighetsuppdelning baserat på avdelningens syfte och arbetsflöde. Exempelvis utvecklingsavdelningen *Novatrix-Utveckling* har endast *Reader* behörighet. Avdelningens syfte är inte underhåll av resurser utan utveckling av applikationer i verksamheten. *Novatrix-Drift* har *Contributor* behörighet då dem jobbar med underhåll av resurserna och behöver ha åtkomst till verktyg som starta & konfigurera resurser. 
