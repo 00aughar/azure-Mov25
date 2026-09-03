@@ -12,7 +12,7 @@ Skapade dedikerade användarkonton i Microsoft Entra ID avsedda för rollbaserad
 
 # 2. Skapa säkerhetsgrupp i azure portalen via Entra
 
-Skapade säkerhetsgrupperna Azure-Drift och Azure-Utveckling i Entra ID för att möjliggöra gruppbaserad behörighetsstyrning.
+Skapade säkerhetsgrupperna *Azure-Drift* och *Azure-Utveckling* i Entra ID för att möjliggöra gruppbaserad behörighetsstyrning.
 
 # 3. RBAC, behörighet & scope
 
