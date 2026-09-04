@@ -19,3 +19,20 @@ Navigera till *vnet-novatrix* och välja subnät. Skapa nytt subnät.
 
 3. Skapa nätverksäkerhetsgrupper (NSG) 
 
+Portar öppnas med tankesättet Least Privledge. Minsta möjliga antal portar som behövs öppnas baserat på att dem fyller en funktion. 
+
+Via Azure portalen navigera till Network securit groups och skapa en security group. Säkerhetsgruppen gäller för resursgrupp *rg-novatrix* och heter *nsg-web*.
+
+Navigera till säkerhetsgruppen *nsg-web* och välj "Inbound security rules" och lägger till:
+- *allow-web* Tillåt inkommande trafik på portar *80* och *443* för web trafik
+- *allow-ssh-admin* Tillåt inkommande trafik på port *22* endast för min lokala IP-address
+
+4. Koppla NSG till subnätet
+
+Navigera till säkerhetsgruppen *nsg-web* och koppla till *vnet-novatrix* subnät *snet-web*
+
+
+
+
+
+Skiss
