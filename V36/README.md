@@ -31,7 +31,7 @@ Navigera till säkerhetsgruppen *nsg-web* och välj "Inbound security rules" och
 
 4. Koppla NSG till subnätet
 
-Navigera till säkerhetsgruppen *nsg-web* och koppla till *vnet-novatrix* subnät *snet-web*
+Navigera till säkerhetsgruppen *nsg-web* och koppla till *vnet-novatrix* subnät *snet-web*. När säkerhetsgruppen är kopplad till det virtuella nätverket slår det in även på subnäten. 
 
 5. Placera VM i rätt subnät
 
@@ -41,4 +41,14 @@ När den nya virtuella maskinen skapas välj att nätverkskortet (NIC) är låst
 
 6. Verifiera att SSH följer NSG regler
 
-Skiss
+Via Azure Portalen navigera till Network Watcher > IP flow verify. Testa trafiken via en okänd IP address för att testa NSG regel *allow-ssh-admin* på port *22* blir nekad.
+
+
+
+7. Skiss Nätverksdesign & NSG Tabell
+
+| Regel | Riktning | Källa | Port | Åtgärd | Motivering |
+|---|---|---|---|---|---|
+| allow-web | Inbound | Internet | 80, 443 | Allow | Formuläret ska vara publikt nåbart |
+| allow-ssh-admin | Inbound | Lokal IP-adress | 22 | Allow | Endast administratör ska kunna hantera VM:en |
+| deny-all-inbound | Inbound | Any | Any | Deny | Explicit stäng allt annat |
