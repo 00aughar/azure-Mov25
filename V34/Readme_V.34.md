@@ -39,7 +39,7 @@ Navigering till SSH nyckel:
 
 Sätt behörighet på nyckel:
 1. ```icacls .\vm-novatrix-web_key.pem /inheritance:r```
-2. ```icacls.\vm-novatrix-web_key.pem /grant:r "$($env:USERNAME):R"```
+2. ```icacls .\vm-novatrix-web_key.pem /grant:r "$($env:USERNAME):R"```
 
 Anslut till server:
 ```ssh -i .\vm-novatrix-web_key.pem azureuser@172.160.243.203```
