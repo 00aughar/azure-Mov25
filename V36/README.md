@@ -203,8 +203,12 @@ az network vnet subnet update --resource-group "$RESOURCE_GROUP" --vnet-name "$V
 
 ## Hotmodellen
 
+Hotmodellen jobbar med förebyggande på följande sätt:
+
 - Segmentering (snet-web/snet-db/snet-admin) skyddar mot att en komprometterad webbserver kan nå databasen direkt
 - Hoppvärdsdesignen skyddar mot att webbservern någonsin exponerar SSH mot internet
+- *nsg-db* skyddar mot direktåtkomst till lagringen från internet, även om en angripare skulle hitta ett sätt att nå *snet-db* subnätet utifrån, nekas trafiken på NSG-nivå.
+
 
 ## Verifiering & Resultat
 
