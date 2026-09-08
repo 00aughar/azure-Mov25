@@ -4,15 +4,15 @@
 
 **August Hartwig** 
 **MOV25** 
-**x/x**
+**8/9**
 
-1. Skapa ett VNET
+## 1. Skapa ett VNET
 
 Via Azure portalen navigerar jag till virtuella nätverk. Skapar ett nytt virtuellt nätverk för nätverksresursen *rg-novatrix* som jag döper till *vnet-novatrix* i regionen *Sweden Central*.
 
 Syftet med VNET är att kunna skapa en isolerad och kontrollerad miljö där servrar och resurser blir mindre exponerade mot internet.
 
-2. Skapa subnäten
+## 2. Skapa subnäten
 
 Navigera till *vnet-novatrix* och välja subnät. Skapa nytt subnät.
 
@@ -24,11 +24,11 @@ Navigera till *vnet-novatrix* och välja subnät. Skapa nytt subnät.
 
 Syftet är att skydda nätverkets olika delar genom segmentering. Uppdelningen görs med tydlig namngiving på vilken roll inom nätverket subnätet har.
 
-3. Skapa nätverksäkerhetsgrupper (NSG) 
+## 3. Skapa nätverksäkerhetsgrupper (NSG) 
 
 Portar öppnas med tankesättet Least Privledge. Minsta möjliga antal portar som behövs öppnas baserat på att dem fyller en funktion. 
 
-Via Azure portalen navigera till Network securit groups och skapa en security group. Säkerhetsgruppen gäller för resursgrupp *rg-novatrix* och heter *nsg-web*.
+Via Azure portalen navigera till Network security groups och skapa en security group. Säkerhetsgruppen gäller för resursgrupp *rg-novatrix* och heter *nsg-web*.
 
 Navigera till säkerhetsgruppen *nsg-web* och välj "Inbound security rules" och lägger till:
 - *allow-web* Tillåt inkommande trafik på portar *80* och *443* för web trafik
@@ -36,19 +36,19 @@ Navigera till säkerhetsgruppen *nsg-web* och välj "Inbound security rules" och
 
 ![alt text](<Inbound rules-1.png>)
 
-4. Koppla NSG till subnätet
+## 4. Koppla NSG till subnätet
 
 Navigera till säkerhetsgruppen *nsg-web* och koppla till *vnet-novatrix* subnät *snet-web*. När säkerhetsgruppen är kopplad till det virtuella nätverket slår det in även på subnäten. 
 
 ![alt text](<NSG subnet kopplad.png>)
 
-5. Placera VM i rätt subnät
+## 5. Placera VM i rätt subnät
 
 Navigera till den virutella maskinen *vm-novatrix-web* och se till att den är avstängd för att skapa en snapshot av maskinens hårddisk. Därefter ta bort den virutella maskinen för att starta upp en ny virtuell maskin med snapshoten.
 
 När den nya virtuella maskinen skapas välj att nätverkskortet (NIC) är låst till rätt vnet *vnet-novatrix* 
 
-6. Verifiera att SSH följer NSG regler
+## 6. Verifiera att SSH följer NSG regler
 
 Via Azure Portalen navigera till Network Watcher > IP flow verify. Testa trafiken via en okänd IP address för att testa NSG regel *allow-ssh-admin* på port *22* blir nekad.
 
@@ -58,7 +58,7 @@ Via Azure Portalen navigera till Network Watcher > IP flow verify. Testa trafike
 
 
 
-7. Skiss Nätverksdesign & NSG Tabell
+## 7. Skiss Nätverksdesign & NSG Tabell
 
 ![alt text](nätverksskiss.png)
 
@@ -67,18 +67,18 @@ Via Azure Portalen navigera till Network Watcher > IP flow verify. Testa trafike
 |---|---|---|---|---|---|
 | allow-web | Inbound | Internet | 80, 443 | Allow | Formuläret ska vara publikt nåbart |
 | allow-ssh-admin | Inbound | Lokal IP-adress | 22 | Allow | Endast administratör ska kunna hantera VM:en |
-| deny-all-inbound | Inbound | Any | Any | Deny | Explicit stäng allt annat |
+| deny-all-inbound | Inbound | Any | Any | Deny | Blockerar övrigt inkommande trafik |
 
 
-8. Challenge
+## 8. Challenge
 
 Skriptet *deploy-network.sh* skapar ett segmenterat virtuellt nätverk *vnet-novatrix* som består av de tre subnäten *snet-web*, *snet-db* och *snet-admin*. Varje subnät skyddas av en dedikerad säkerhetsgrupp *nsg-web*, *nsg-db* respektive *nsg-admin*.
 
 Lösningen etablerar en säkrad hoppvärdsarkitektur där all extern SSH-trafik styrs direkt till hoppvärden *vm-novatrix-admin* (i *snet-admin*). Därifrån kan behörig administrativ trafik vidarebefordras internt till målservern *vm-novatrix-web* (i *snet-web*), medan direktanslutningar utifrån mot det interna nätverket blockeras helt.
 
-1. Variabler klarrgör namngivning, plats, prefix & resursgrupp inom scriptet.
+## 1. Variabler klarrgör namngivning, plats, prefix & resursgrupp inom scriptet.
 
-``` SUBSCRIPTION_ID="c65a0fbb-a7a6-42f1-8743-0e248b213c2c"
+```
 RESOURCE_GROUP="rg-novatrix-test"
 LOCATION="swedencentral"
 VNET_NAME="vnet-novatrix"
@@ -99,7 +99,7 @@ NSG_DB="nsg-db"
 NSG_ADMIN="nsg-admin"
 
 ```
-2. Skapande av Vnet och subnätet *snet-web*
+## 2. Skapande av Vnet och subnätet *snet-web*
 
 ```
 az network vnet create \
@@ -111,7 +111,7 @@ az network vnet create \
   --location "$LOCATION"
 ```
 
-3. Skapande av subnäten *nsg-db* för lagrning och *nsg-admin* för hoppvärden.
+## 3. Skapande av subnäten *snet-db* för lagrning och *snet-admin* för hoppvärden.
 
 ```
 az network vnet subnet create \
@@ -128,7 +128,7 @@ az network vnet subnet create \
 
   ```
 
- 4. Skapande av NSG regler
+ ## 4. Skapande av NSG regler
 
   ```
   az network nsg create --resource-group "$RESOURCE_GROUP" --name "$NSG_WEB" --location "$LOCATION"
@@ -136,7 +136,7 @@ az network nsg create --resource-group "$RESOURCE_GROUP" --name "$NSG_DB" --loca
 az network nsg create --resource-group "$RESOURCE_GROUP" --name "$NSG_ADMIN" --location "$LOCATION"
 ```
 
-5. Konfiguration av NSG regler. Portar, protkokoll, prioritet
+## 5. Konfiguration av NSG regler. Portar, protkokoll, prioritet
 
 ```
 echo "5. Konfigurerar nsg-web..."
@@ -191,7 +191,7 @@ az network nsg rule create \
   --source-address-prefixes Internet
 ```
 
-7. Koppla NSGer till subnäten
+## 7. Koppla NSGer till subnäten
 
 ```
 
@@ -200,3 +200,22 @@ az network vnet subnet update --resource-group "$RESOURCE_GROUP" --vnet-name "$V
 az network vnet subnet update --resource-group "$RESOURCE_GROUP" --vnet-name "$VNET_NAME" --name "$SUBNET_ADMIN" --network-security-group "$NSG_ADMIN"
 
 ```
+
+## Hotmodellen
+
+- Segmentering (snet-web/snet-db/snet-admin) skyddar mot att en komprometterad webbserver kan nå databasen direkt
+- Hoppvärdsdesignen skyddar mot att webbservern någonsin exponerar SSH mot internet
+
+## Reslutat
+
+Hoppvärden tillåts ansluta via sin interna IP-address
+
+![alt text](<hoppvärd godkänd SSH.png>)
+
+Utomstående IP addresser nekas anslutning
+
+![alt text](<nekad SSH hoppvärd.png>)
+
+Anslutning via SSH genom Azure CLI nekas av web-server men godkänns av hoppvärd
+
+![alt text](<terminal hoppvärd och web-1.png>)

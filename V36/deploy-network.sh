@@ -2,7 +2,6 @@
 set -euo pipefail
 
 # --- Variabler ---
-SUBSCRIPTION_ID="c65a0fbb-a7a6-42f1-8743-0e248b213c2c"
 RESOURCE_GROUP="rg-novatrix-test"
 LOCATION="swedencentral"
 VNET_NAME="vnet-novatrix"
@@ -22,8 +21,7 @@ NSG_WEB="nsg-web"
 NSG_DB="nsg-db"
 NSG_ADMIN="nsg-admin"
 
-# 0. Sätt aktiv subscription
-az account set --subscription "$SUBSCRIPTION_ID"
+
 
 # 1. Skapa VNet och snet-web
 echo "1. Skapar VNet och snet-web..."
@@ -81,7 +79,7 @@ az network nsg rule create \
   --direction Inbound --access Allow --protocol Tcp \
   --destination-port-ranges 22 \
   --source-address-prefixes "$SUBNET_ADMIN_PREFIX"
-  
+
   echo "Konfigurerar nsg-admin..."
 az network nsg rule create \
   --resource-group "$RESOURCE_GROUP" \
