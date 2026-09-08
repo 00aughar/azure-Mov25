@@ -26,7 +26,7 @@ Syftet är att skydda nätverkets olika delar genom segmentering. Uppdelningen g
 
 ## 3. Skapa nätverksäkerhetsgrupper (NSG) 
 
-Portar öppnas med tankesättet Least Privledge. Minsta möjliga antal portar som behövs öppnas baserat på att dem fyller en funktion. 
+Portar öppnas med tankesättet Least Privilege. Minsta möjliga antal portar som behövs öppnas baserat på att dem fyller en funktion. 
 
 Via Azure portalen navigera till Network security groups och skapa en security group. Säkerhetsgruppen gäller för resursgrupp *rg-novatrix* och heter *nsg-web*.
 
@@ -111,7 +111,7 @@ az network vnet create \
   --location "$LOCATION"
 ```
 
-## 3. Skapande av subnäten *snet-db* för lagrning och *snet-admin* för hoppvärden.
+## 3. Skapande av subnäten *snet-db* för lagring och *snet-admin* för hoppvärden.
 
 ```
 az network vnet subnet create \
@@ -206,16 +206,16 @@ az network vnet subnet update --resource-group "$RESOURCE_GROUP" --vnet-name "$V
 - Segmentering (snet-web/snet-db/snet-admin) skyddar mot att en komprometterad webbserver kan nå databasen direkt
 - Hoppvärdsdesignen skyddar mot att webbservern någonsin exponerar SSH mot internet
 
-## Reslutat
+## Verifiering & Resultat
 
-Hoppvärden tillåts ansluta via sin interna IP-address
+Hoppvärden tillåts ansluta till webbservern via SSH med sin interna IP-address.
 
 ![alt text](<hoppvärd godkänd SSH.png>)
 
-Utomstående IP addresser nekas anslutning
+Utomstående IP addresser nekas anslutning via SSH till webbservern.
 
 ![alt text](<nekad SSH hoppvärd.png>)
 
-Anslutning via SSH genom Azure CLI nekas av web-server men godkänns av hoppvärd
+Anslutning via SSH från min lokala IP address genom Azure CLI nekas av web-server men godkänns av hoppvärd.
 
 ![alt text](<terminal hoppvärd och web-1.png>)
