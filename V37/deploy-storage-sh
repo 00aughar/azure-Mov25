@@ -1,0 +1,41 @@
+
+# Skapa Storage Account
+
+az storage account create --name stnovatrix --sku Standard_LRS --kind StorageV2 --resource-group rg-novatrix
+
+# Skapa Container
+
+az storage container create --name arenden --account-name stnovatrix --auth-mode login
+
+# Ladda upp en fil till containern
+
+az storage blob upload --container-name arenden --name web-browsers.jpeg --file ./web-browsers.jpeg --account-name stnovatrix
+
+# Verifiera 1. Lista containrar 2.Lista blobar i container
+
+1. 
+az storage container list -o table --account-name stnovatrix
+
+2. 
+az storage blob list -o table --account-name stnovatrix --container-name arenden
+
+# Tilldela RBAC roll till managed identity
+
+#
+Role = RBAC rollen
+Assigne = Object (principal) ID (Managed Identity)
+Scope = Storage account resource ID (Endpoints Azure Portalen)
+#
+
+az role assignment create \
+  --role "Storage Blob Data Reader" \
+  --assignee cb7bff1b-d2c7-4f37-8983-e114969d0902 \
+  --scope "//subscriptions/c65a0fbb-a7a6-42f1-8743-0e248b213c2c/resourceGroups/rg-novatrix/providers/Microsoft.Storage/storageAccounts/stnovatrix775"
+
+# Stäng publik åtkomst
+
+az storage account update --name stnovatrix775 --allow-blob-public-access false
+
+# Generera SAS för blob
+
+az storage blob generate-sas --blob-url https://stnovatrix775.blob.core.windows.net/arenden/web-browsers.jpeg --permissions r --expiry 2026-09-10T23:59:00Z --account-name stnovatrix
