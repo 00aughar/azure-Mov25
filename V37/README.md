@@ -26,7 +26,7 @@ Navigera till blob container *arenden* och välj uppladdad fil. Välj Generate S
 
 ## 5. Sätt RBAC på Storage Account
 
-Navigera till storage account *stnovatrix552* och Access Control (IAM) och välj rollen *Storage Blob Data Reader* och tilldela på managed identity *id-novatrix-app*
+Navigera till storage account *stnovatrix552* och blob container *arenden*, välj Access Control (IAM) och välj rollen *Storage Blob Data Reader* och tilldela på managed identity *id-novatrix-app*
 
 ## 6. Verifiera Secure transfer & Blob anonymous access
 
@@ -88,9 +88,9 @@ az role assignment create \
 az storage account update --name stnovatrix --allow-blob-public-access false
   ```
 
-# Generera SAS för blob
+# Generera SAS token för blob
 
-Hämta blobens url och definera när SAS token ska gå ut.
+Generera token för blobens url och definera när SAS token ska gå ut.
 
   ```
 az storage blob generate-sas --blob-url https://stnovatrix775.blob.core.windows.net/arenden/web-browsers.jpeg --permissions r --expiry 2026-09-10T23:59:00Z --account-name stnovatrix775
@@ -103,3 +103,5 @@ Lagringslösningen tillämpar Hot storage som default på Storage Account *stnov
 Blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge till en viss nivå. Åtkomsten till filen blir tillfälig inom en kort tidsram och är bunden till den privata länken. Detta är en mycket säkrare lösning än med enkla nycklar som inte har någon tidsbegränsing och ger åtkomst till vem som helst som får tag i nyckeln.
 
 RBAC tillämpas genom att ge Managed Identity *id-novatrix-app* RBAC rollen *Storage Blob Data Reader* för storage account *stnovatrix775*. Syftet är att begränsa läsrättigheterna till en hanterad identitet istället för enskilda användarkonton. 
+
+RBAC tillämpas genom att appen skriver ärenden och bilaga till storage blob containern utan att använda lösenord och nyckel. Appen autentiserar sig genom sin hanterade identitet som *Blob Data Contributor*. Detta gör att appen endast får rätt till containern och inte hela kontot.
