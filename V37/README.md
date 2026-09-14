@@ -96,6 +96,7 @@ Generera token för blobens url och definera när SAS token ska gå ut.
 az storage blob generate-sas --blob-url https://stnovatrix775.blob.core.windows.net/arenden/web-browsers.jpeg --permissions r --expiry 2026-09-10T23:59:00Z --account-name stnovatrix775
   ```
 
+
 ## Motivering till Lagringslösnning
 
 Lagringslösningen tillämpar Hot storage som default på Storage Account *stnovatrix775* vilket innebär att blobar på blob container *arenden* också kategoriseraas som hot storage. Anledningen till detta är att det blir billigare att öppna filerna som öppnas regelbundet och det går snabbare jämfört med ifall vi hade haft Cool storage där varje gång en fil öppnas blir en dyrare kostnad om den öppnas regelbundet och det går långsamare.
@@ -105,3 +106,13 @@ Blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge
 RBAC tillämpas genom att ge Managed Identity *id-novatrix-app* RBAC rollen *Storage Blob Data Reader* för storage account *stnovatrix775*. Syftet är att begränsa läsrättigheterna till en hanterad identitet istället för enskilda användarkonton. 
 
 RBAC tillämpas genom att appen skriver ärenden och bilaga till storage blob containern utan att använda lösenord och nyckel. Appen autentiserar sig genom sin hanterade identitet som *Blob Data Contributor*. Detta gör att appen endast får rätt till containern och inte hela kontot.
+
+# Förberedd ärende appen och mottagande av fomulär till storage account
+
+Starta om en ny VM som byggs upp med *cloud-init.txt* som förbereder web servern med *app.py*, *arendeapp.service* & bygger upp html sidan
+
+Verifiera att ärenden har kommit till storage container
+
+```
+az storage blob list --account-name stnovatrix775 --container-name arenden --auth-mode key --output table
+```
