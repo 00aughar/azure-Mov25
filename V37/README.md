@@ -12,21 +12,33 @@ Via Azure portalen navigera till *Storage Account* och skapa ett storage account
 
 Syftet är att ha en samlingsplats där all vår lagring kommer att samlas
 
+
+
 ## 2. Skapa en blob container och ladda upp en fil
 
 Navigera till Storage Account *stnovatrix552* och välj *Containers*. Skapa ny container, namn *arenden*. Öppna sedan containern *arenden* och välj upload och välj en fil. Öppna filen och testa besöka dens URL för att säkerställa att den är privat.
+
+
 
 ## 3. Verifiera att storage account/container är i rätt resursgrupp
 
 Se till att storage account *stnovatrix552*, blob container *arenden* & upladad fil (blob) ligger i resursgruppen *rg-novatrix*
 
+![alt text](<storage account verifiering-1.png>)
+
+![alt text](<fil verifiering.png>)
+
 ## 4. Generera SAS token för enskild fil
 
 Navigera till blob container *arenden* och välj uppladdad fil. Välj Generate SAS och välj ett snävt tidspann och generate
 
+![alt text](<SAS token.png>)
+
 ## 5. Sätt RBAC på Storage Account
 
 Navigera till storage account *stnovatrix552* och blob container *arenden*, välj Access Control (IAM) och välj rollen *Storage Blob Data Reader* och tilldela på managed identity *id-novatrix-app*
+
+![alt text](<IAM form app arenden.png>)
 
 ## 6. Verifiera Secure transfer & Blob anonymous access
 
@@ -34,6 +46,7 @@ Navigera till storage account *stnovatrix552* och Configuration. Kontrollera att
 
 Verifiera att det funkar genom att besöka en blobs anonyma URL och se om det blir nekad. Då är publik åtkomst avstängd.
 
+![alt text](<Privat Blob.png>)
 
 ## Challenge
 
@@ -113,8 +126,19 @@ Kostnad för lagring, lagringsskydd & redundas
 För att formuläret som fylls i behövs en backend applikation som kan skriva av ifylld data till vår storage account. Genom att använda veckans *cloud-init.txt* byggs en VM upp med applikationen *app.py*, html sidan *index.html* & azure bibliotket. Detta driftsätter miljön och skapar en fungerande formulär websida.
 
 
-Verifiera att ärenden har kommit till storage container
+Testa skicka ett ifyllt formulär:
+![alt text](<ifyllt formulär.png>)
+
+Skickat:
+![alt text](<ärende skickat.png>)
+
+Kolla om formulär och blob har skrivits över till blob container:
+![alt text](<mottaget formulär blob.png>)
+
+
+Verifiera att ärenden har kommit till blob container via script:
 
 ```
 az storage blob list --account-name stnovatrix775 --container-name arenden --auth-mode login --output table
 ```
+![alt text](<ärenden verifiering terminal.png>)
