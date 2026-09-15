@@ -28,7 +28,7 @@ Scope = Storage account resource ID (Endpoints Azure Portalen)
 #
 
 az role assignment create \
-  --role "Storage Blob Data Reader" \
+  --role "Storage Blob Data Contributor" \
   --assignee cb7bff1b-d2c7-4f37-8983-e114969d0902 \
   --scope "//subscriptions/c65a0fbb-a7a6-42f1-8743-0e248b213c2c/resourceGroups/rg-novatrix/providers/Microsoft.Storage/storageAccounts/stnovatrix775"
 

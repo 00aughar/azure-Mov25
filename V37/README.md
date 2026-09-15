@@ -77,7 +77,7 @@ Scope = Storage account resource ID (Endpoints Azure Portalen)
 
 ```
 az role assignment create \
-  --role "Storage Blob Data Reader" \
+  --role "Storage Blob Data Contributor" \
   --assignee cb7bff1b-d2c7-4f37-8983-e114969d0902 \
   --scope "//subscriptions/c65a0fbb-a7a6-42f1-8743-0e248b213c2c/resourceGroups/rg-novatrix/providers/Microsoft.Storage/storageAccounts/stnovatrix775"
 ```
@@ -99,20 +99,22 @@ az storage blob generate-sas --blob-url https://stnovatrix775.blob.core.windows.
 
 ## Motivering till Lagringslösnning
 
-Lagringslösningen tillämpar Hot storage som default på Storage Account *stnovatrix775* vilket innebär att blobar på blob container *arenden* också kategoriseraas som hot storage. Anledningen till detta är att det blir billigare att öppna filerna som öppnas regelbundet och det går snabbare jämfört med ifall vi hade haft Cool storage där varje gång en fil öppnas blir en dyrare kostnad om den öppnas regelbundet och det går långsamare.
+Kostnad för lagring, lagringsskydd & redundas
+- Lagringslösningen tillämpar Hot storage som default på Storage Account *stnovatrix775* vilket innebär att blobar på blob container *arenden* också kategoriseras som hot storage. Anledningen till detta val av lagring är att det blir billigare att öppna filerna då dem förväntas öppnas regelbundet för att se svar och filer från ifyllda formulär.
+- Lagringen har en LRS redundans vilket innebär att tre kopior av datan lagras inom ett datascenter. Detta är billigaste lösningen och fungerar för nuvarande miljö då det främst är en testmiljö.
 
-Blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge till en viss nivå. Åtkomsten till filen blir tillfälig inom en kort tidsram och är bunden till den privata länken. Detta är en mycket säkrare lösning än med enkla nycklar som inte har någon tidsbegränsing och ger åtkomst till vem som helst som får tag i nyckeln.
 
-RBAC tillämpas genom att ge Managed Identity *id-novatrix-app* RBAC rollen *Storage Blob Data Reader* för storage account *stnovatrix775*. Syftet är att begränsa läsrättigheterna till en hanterad identitet istället för enskilda användarkonton. 
+- Blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge till en viss nivå. Åtkomsten till filen blir tillfälig inom en kort tidsram och är bunden till den privata länken. Detta är en mycket säkrare lösning än med enkla nycklar som inte har någon tidsbegränsing och ger åtkomst till vem som helst som får tag i nyckeln.
 
-RBAC tillämpas genom att appen skriver ärenden och bilaga till storage blob containern utan att använda lösenord och nyckel. Appen autentiserar sig genom sin hanterade identitet som *Blob Data Contributor*. Detta gör att appen endast får rätt till containern och inte hela kontot.
+- RBAC tillämpas genom att appen skriver ärenden och bilaga till storage blob containern utan att använda lösenord och nyckel. den virtuella maskinen *vm-novatrix-web* med applikationen *arendeapp.service* autentiserar sig genom sin hanterade identitet som *Blob Data Contributor*. Detta gör att appen endast får rätt till containern och inte hela kontot och kan skriva in datan från ifyllda formulär.
 
-# Förberedd ärende appen och mottagande av fomulär till storage account
+# Förberedd virtuell maskin för backend ärende appen och mottagande av fomulär till storage account
 
-Starta om en ny VM som byggs upp med *cloud-init.txt* som förbereder web servern med *app.py*, *arendeapp.service* & bygger upp html sidan
+För att formuläret som fylls i behövs en backend applikation som kan skriva av ifylld data till vår storage account. Genom att använda veckans *cloud-init.txt* byggs en VM upp med applikationen *app.py*, html sidan *index.html* & azure bibliotket. Detta driftsätter miljön och skapar en fungerande formulär websida.
+
 
 Verifiera att ärenden har kommit till storage container
 
 ```
-az storage blob list --account-name stnovatrix775 --container-name arenden --auth-mode key --output table
+az storage blob list --account-name stnovatrix775 --container-name arenden --auth-mode login --output table
 ```
