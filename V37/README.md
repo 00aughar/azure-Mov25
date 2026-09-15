@@ -4,13 +4,13 @@
 
 **August Hartwig** 
 **MOV25** 
-**x/x**
+**15/9**
 
 ## 1. Skapa ett Storage Account
 
 Via Azure portalen navigera till *Storage Account* och skapa ett storage account för resursgruppen *rg-novatrix*. Namn *stnovatrix552*, Typ *Blob storage* och redundans *LRS*
 
-Syftet är att ha en samlingsplats där all vår lagring kommer att samlas
+Syftet är att ha en samlingsplats där all vår lagring kommer att samlas.
 
 
 
@@ -18,7 +18,7 @@ Syftet är att ha en samlingsplats där all vår lagring kommer att samlas
 
 Navigera till Storage Account *stnovatrix552* och välj *Containers*. Skapa ny container, namn *arenden*. Öppna sedan containern *arenden* och välj upload och välj en fil. Öppna filen och testa besöka dens URL för att säkerställa att den är privat.
 
-
+Syftet med en blob container är att få en samlingsplats för tjänsterna som ska lagra sin data.
 
 ## 3. Verifiera att storage account/container är i rätt resursgrupp
 
@@ -30,19 +30,25 @@ Se till att storage account *stnovatrix552*, blob container *arenden* & upladad 
 
 ## 4. Generera SAS token för enskild fil
 
-Navigera till blob container *arenden* och välj uppladdad fil. Välj Generate SAS och välj ett snävt tidspann och generate
+Navigera till blob container *arenden* och välj uppladdad fil. Välj Generate SAS och välj ett snävt tidspann och generate.
+
+Syftet är att kunna öppna blobar säkert utan en publik nyckel. Med en tidsbegränsad generad URL är datan mindre exponerad och minskar risken att läcka ut.
 
 ![alt text](<SAS token.png>)
 
-## 5. Sätt RBAC på Storage Account
+## 5. Sätt RBAC på Storage Account med hanterad identitet
 
-Navigera till storage account *stnovatrix552* och blob container *arenden*, välj Access Control (IAM) och välj rollen *Storage Blob Data Reader* och tilldela på managed identity *id-novatrix-app*
+Navigera till storage account *stnovatrix552* och blob container *arenden*, välj Access Control (IAM) och välj rollen *Storage Blob Data Reader* och tilldela på managed identity *id-novatrix-app*.
+
+Syftet med detta är att ha tryggare åtkomst till innehållet i blob containern och slippa använda enskilda nycklar som kan hamna i fel händer. Endast applikationen ska kunna läsa innehåll och blobar i container *arenden*.
 
 ![alt text](<IAM form app arenden.png>)
 
 ## 6. Verifiera Secure transfer & Blob anonymous access
 
 Navigera till storage account *stnovatrix552* och Configuration. Kontrollera att Secure Transfer är Enabled & Blob anonymous access är disabled
+
+![alt text](<Verifiering secure transfer.png>)
 
 Verifiera att det funkar genom att besöka en blobs anonyma URL och se om det blir nekad. Då är publik åtkomst avstängd.
 
@@ -116,12 +122,11 @@ Kostnad för lagring, lagringsskydd & redundas
 - Lagringslösningen tillämpar Hot storage som default på Storage Account *stnovatrix775* vilket innebär att blobar på blob container *arenden* också kategoriseras som hot storage. Anledningen till detta val av lagring är att det blir billigare att öppna filerna då dem förväntas öppnas regelbundet för att se svar och filer från ifyllda formulär.
 - Lagringen har en LRS redundans vilket innebär att tre kopior av datan lagras inom ett datascenter. Detta är billigaste lösningen och fungerar för nuvarande miljö då det främst är en testmiljö.
 
-
-- Blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge till en viss nivå. Åtkomsten till filen blir tillfälig inom en kort tidsram och är bunden till den privata länken. Detta är en mycket säkrare lösning än med enkla nycklar som inte har någon tidsbegränsing och ger åtkomst till vem som helst som får tag i nyckeln.
-
 - RBAC tillämpas genom att appen skriver ärenden och bilaga till storage blob containern utan att använda lösenord och nyckel. den virtuella maskinen *vm-novatrix-web* med applikationen *arendeapp.service* autentiserar sig genom sin hanterade identitet som *Blob Data Contributor*. Detta gör att appen endast får rätt till containern och inte hela kontot och kan skriva in datan från ifyllda formulär.
 
-# Förberedd virtuell maskin för backend ärende appen och mottagande av fomulär till storage account
+- Vid behov kan blob delas ut med en SAS token vilket innebär att vi tillämpar least privledge till en viss nivå. Åtkomsten till filen blir tillfälig inom en kort tidsram och är bunden till den privata länken. Detta är en mycket säkrare lösning än med enkla nycklar som inte har någon tidsbegränsing och ger åtkomst till vem som helst som får tag i nyckeln.
+
+## Förberedd virtuell maskin för backend ärende appen och mottagande av formulär till storage account
 
 För att formuläret som fylls i behövs en backend applikation som kan skriva av ifylld data till vår storage account. Genom att använda veckans *cloud-init.txt* byggs en VM upp med applikationen *app.py*, html sidan *index.html* & azure bibliotket. Detta driftsätter miljön och skapar en fungerande formulär websida.
 
@@ -135,10 +140,17 @@ Skickat:
 Kolla om formulär och blob har skrivits över till blob container:
 ![alt text](<mottaget formulär blob.png>)
 
+Kolla blobens innehåll via Azure:
+![alt text](<Bifogad bild formulär.png>)
+
+![alt text](<formulär info.png>)
+
 
 Verifiera att ärenden har kommit till blob container via script:
 
 ```
 az storage blob list --account-name stnovatrix775 --container-name arenden --auth-mode login --output table
 ```
+Resultat:
+
 ![alt text](<ärenden verifiering terminal.png>)
