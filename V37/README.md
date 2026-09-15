@@ -8,7 +8,7 @@
 
 ## 1. Skapa ett Storage Account
 
-Via Azure portalen navigera till *Storage Account* och skapa ett storage account för resursgruppen *rg-novatrix*. Namn *stnovatrix552*, Typ *Blob storage* och redundans *LRS*
+Via Azure portalen navigera till *Storage Account* och skapa ett storage account för resursgruppen *rg-novatrix*. Namn *stnovatrix552*, Typ *Blob storage* och redundans *LRS*.
 
 Syftet är att ha en samlingsplats där all vår lagring kommer att samlas.
 
@@ -115,6 +115,7 @@ Generera token för blobens url och definera när SAS token ska gå ut.
 az storage blob generate-sas --blob-url https://stnovatrix775.blob.core.windows.net/arenden/web-browsers.jpeg --permissions r --expiry 2026-09-10T23:59:00Z --account-name stnovatrix775
   ```
 
+Integrering med förra veckans IaC som bygger upp nätverk i samband med lagring finns i scriptet "*deploy-storage-network.sh*" i repot för V37.
 
 ## Motivering till Lagringslösnning
 
