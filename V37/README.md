@@ -12,8 +12,6 @@ Via Azure portalen navigera till *Storage Account* och skapa ett storage account
 
 Syftet är att ha en samlingsplats där all vår lagring kommer att samlas.
 
-
-
 ## 2. Skapa en blob container och ladda upp en fil
 
 Navigera till Storage Account *stnovatrix552* och välj *Containers*. Skapa ny container, namn *arenden*. Öppna sedan containern *arenden* och välj upload och välj en fil. Öppna filen och testa besöka dens URL för att säkerställa att den är privat.
@@ -98,13 +96,13 @@ Scope = Storage account resource ID (Endpoints Azure Portalen)
 az role assignment create \
   --role "Storage Blob Data Contributor" \
   --assignee cb7bff1b-d2c7-4f37-8983-e114969d0902 \
-  --scope "//subscriptions/c65a0fbb-a7a6-42f1-8743-0e248b213c2c/resourceGroups/rg-novatrix/providers/Microsoft.Storage/storageAccounts/stnovatrix775"
+  --scope "/subscriptions/c65a0fbb-a7a6-42f1-8743-0e248b213c2c/resourceGroups/rg-novatrix/providers/Microsoft.Storage/storageAccounts/stnovatrix775/blobServices/default/containers/arenden"
 ```
 
 # Stäng publik åtkomst
 
   ```
-az storage account update --name stnovatrix --allow-blob-public-access false
+az storage account update --name stnovatrix775 --allow-blob-public-access false
   ```
 
 # Generera SAS token för blob
