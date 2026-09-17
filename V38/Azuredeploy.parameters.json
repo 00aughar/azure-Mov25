@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "value": "swedencentral" },
+    "namePrefix": { "value": "novatrix" },
+    "storageAccountName": { "value": "stnovatrix775" },
+    "containerName": { "value": "arenden" },
+    "storageAccessTier": { "value": "Hot" },
+    "storageSku": { "value": "Standard_LRS" },
+    "adminIp": { "value": "FYLL_I_DIN_PUBLIKA_IP/32" },
+    "adminUsername": { "value": "azureuser" },
+    "vmSize": { "value": "Standard_B2ats_v2" }
+  }
+}
