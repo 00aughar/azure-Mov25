@@ -8,6 +8,10 @@
 
 
 
+Testa template med what-if
+
+```az deployment group what-if --resource-group rg-novatrix --template-file miljo-skelett.json```
+
 Kontrollera resurser i resursgrupp:
 
 ```$ az resource list --resource-group rg-novatrix -o table```
