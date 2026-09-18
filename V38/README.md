@@ -5,3 +5,9 @@
 **August Hartwig** 
 **MOV25** 
 **x/x**
+
+
+
+Kontrollera resurser i resursgrupp:
+
+```$ az resource list --resource-group rg-novatrix -o table```
