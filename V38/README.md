@@ -112,6 +112,7 @@ Testa template med what-if:
 ```
 az deployment group what-if --resource-group rg-novatrix --template-file miljo-skelett.json
 ```
+![alt text](<komplett Godkänt whatif.png>)
 
 Deploya template:
 
@@ -120,11 +121,14 @@ az deployment group create \
   --resource-group rg-novatrix \
   --template-file miljo-skelett.json
 ```
+![alt text](<Godkänt deploy template.png>)
+
 Kontrollera resurser i resursgrupp:
 
 ```
 az resource list --resource-group rg-novatrix -o table
 ```
+![alt text](<kontroll godkänd deploy.png>)
 
 # IaC Challenge
 
@@ -143,7 +147,7 @@ För att templaten ska fungera behövs värden fyllas i inom parameter filen *mi
 
 sshPublicKey definerar det publika nyckelvärdet som behövs för att ansluta till webservern via SSH och ett nyckelpar kan behövs skapas innan med kommando: ```ssh-keygen -t rsa -b 4096 -f ~/novatrix-v38-key -N ""```
 
-cloudInitWebServer gör att konfigurationsfilen blir läsbar för Azure och kan läsas in för webserverns konfiguration. En ändring behövs även göras i cloud-init.txt filen på rad 36 som definerar lagringens namngivning exempel: *STORAGE_ACCOUNT = "stnovatrix652"*
+cloudInitWebServer gör att konfigurationsfilen blir läsbar för Azure och kan läsas in för webserverns konfiguration. En ändring behövs även göras i cloud-init.txt filen på raden som börjar med *STORAGE_ACCOUNT = "NAMN"*  som definerar lagringens namngivning.
 
 adminIp ger värdet på den lokala IP adressen. Värdet behövs för att NSG regeln för SSH ska godkänna anslutning till webserven.
 
@@ -174,7 +178,8 @@ az deployment group create \
 ## ARM templatens innehåll
 
 ```
-{
+
+  {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
@@ -234,14 +239,17 @@ az deployment group create \
   },
 
   "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2016-01-01",
-      "name": "[parameters('storageName')]",
-      "location": "[parameters('location')]",
-      "sku": { "name": "Standard_LRS" },
-      "kind": "Storage"
-    },
+{
+  "type": "Microsoft.Storage/storageAccounts",
+  "apiVersion": "2016-01-01",
+  "name": "[parameters('storageName')]",
+  "location": "[parameters('location')]",
+  "sku": { "name": "Standard_LRS" },
+  "kind": "Storage",
+  "properties": {
+    "allowBlobPublicAccess": false
+  }
+},
 
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
@@ -449,3 +457,32 @@ az deployment group create \
 }
 ```
 
+## Versionshantering övning
+
+För att öva på versionshantering gjorde jag en ändring i templaten. Då jag upptäckte att mitt storage account fortsatt var publik ladde jag till kod *"allowBlobPublicAccess": false*. Med en tydlig beskrivning av vad ändringen gjorde får jag en spårbarhet i koden som gör det lättare för andra att se vilka ändringar som jag har gjort. Det underlättar även ifall ifall det skulle börja orsaka några problem vid nästa körning av templaten då jag kan spåra bakåt vad felet kan bero på. Nedan syns tydligt vad som ändrades vid commit i koden och tillhörande meddelande.
+
+![alt text](image.png)
+![alt text](Versionshantering.png)
+
+## Reslutat av körning & verifiering
+
+En what-if gjorde innan körning av templaten:
+
+![alt text](<what if komplett.png>)
+
+Komplett körning av template:
+
+![alt text](<komplett template körs.png>)
+
+Kontrollera skapade resurser:
+![alt text](<template skapad.png>)
+
+Webb formulär uppe:
+![alt text](<ifyllt formulär.png>)
+
+Ifyllt och skickat formulär:
+![alt text](<ifyllt formulär-1.png>)
+![alt text](<skickat ärende.png>)
+
+Mottaget formulär och blob:
+![alt text](<mottagen blob.png>)
