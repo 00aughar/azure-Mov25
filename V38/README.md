@@ -4,7 +4,7 @@
 
 **August Hartwig** 
 **MOV25** 
-**x/x**
+**22/9**
 
 
 För godkänt började jag med template mallen *miljo-skelett.json* och byggde upp strukturen där en NSG med öppen webbregel för port 80 & 443, VNEt & subnät samt ett storage account. Namn och region gjorde som parametrar.
@@ -125,3 +125,14 @@ Kontrollera resurser i resursgrupp:
 ```
 az resource list --resource-group rg-novatrix -o table
 ```
+
+# IaC Challenge
+
+
+## Beskrivning av Template, paramterar & cloud-init
+
+ARM template *miljo-skelett.json* provisionerar: storage account + blob container, NSG med SSH & web regler, VNet + subnät, Publik-IP + NIC och en VM med webformulär.
+
+Parameter filen *miljo-skelett.parameters.json* definerar parmetetrar som är unika beroende på hur miljön ska byggas upp och körs ihop med ARM template *miljo-skelett.json*.
+
+VM Webservern byggs upp med *cloud-init.txt* som gör att ärendeformulär kan tas emot och lagras i blob storage.

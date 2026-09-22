@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": { "value": "novatrix" },
+    "location": { "value": "swedencentral" },
+    "storageName": { "value": "VÄLJ UNIKT NAMN FÖR LAGRING: stnovatrixXXX" },
+    "adminUsername": { "value": "azureuser" },
+    "sshPublicKey": { "value": "FYLL I VÄRDET FRÅN TERMINAL: ssh-keygen -y -f ~/novatrix-v38-key" },
+    "cloudInitWebServer": { "value": "FYLL I VÄRDET FRÅN TERMINAL: base64 -w 0 cloud-init.txt" },
+    "adminIp": { "value": "FYLL I VÄRDET FRÅN TERMINAL: curl ifconfig.me" },
+    "vmSize": { "value": "Standard_D2als_v6" }
+  }
+}
