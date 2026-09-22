@@ -154,3 +154,20 @@ adminIp ger värdet på den lokala IP adressen. Värdet behövs för att NSG reg
 
 "adminIp": { "value": "FYLL I VÄRDET FRÅN TERMINAL: curl ifconfig.me" },
 ```
+
+## Körning av Template
+
+När nödvändiga template värden, SSH nyckel har genererats och cloud-init.txt redigerats för miljön kan template deployas. En resursgrupp måste finnas innan om den inte har skapats upp.
+
+## 1. Skapa resursgruppen (om den inte redan finns)
+```  
+az group create --name rg-novatrix --location swedencentral
+```  
+
+## 2. Deploya templaten
+```  
+az deployment group create \
+  --resource-group rg-novatrix \
+  --template-file miljo-skelett.json \
+  --parameters @miljo-skelett.parameters.json
+```  
