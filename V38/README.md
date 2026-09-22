@@ -171,3 +171,281 @@ az deployment group create \
   --template-file miljo-skelett.json \
   --parameters @miljo-skelett.parameters.json
 ```  
+## ARM templatens innehåll
+
+```
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "note": "SKELETT att bygga vidare i. Strukturen finns, men resources ar tom med flit. Fyll i sjalv. Att gora (G): en NSG med en webbregel (portar 80 och 443), ett VNet med ett subnat, och ett storage account. For VG: lagg till en VM och koppla ihop resurserna med dependsOn. Titta i de enkla exempelfilerna for monstret: varje resurs har type, apiVersion, name, location och properties. Parametrarna har defaultvarden, sa du kan deploya direkt med: az deployment group create -g rg-novatrix --template-file miljo-skelett.json (eller gor en egen parameterfil nar du vill styra vardena)."
+  },
+
+  "parameters": {
+    "namePrefix": {
+      "type": "string",
+      "defaultValue": "novatrix",
+      "metadata": { "description": "Prefix for alla resursnamn, sa att allt hanger ihop." }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "swedencentral",
+      "metadata": { "description": "Region for resurserna." }
+    },
+    "storageName": {
+      "type": "string",
+      "metadata": { "description": "Globalt unikt namn, endast gemener och siffror, max 24 tecken." }
+    },
+    "cloudInitWebServer": {
+      "type": "string",
+      "metadata": { "description": "Base64-kodad cloud-init som bygger upp arendeappen." }
+    },
+    "sshPublicKey": {
+      "type": "string",
+      "metadata": { "description": "Din publika SSH-nyckel (t.ex. fran novatrix-admin_key.pub)." }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser"
+    },
+    "adminIp": {
+      "type": "string",
+      "metadata": { "description": "Din publika IP (t.ex. fran curl ifconfig.me) for SSH-atkomst." }
+    },
+  "vmSize": {
+  "type": "string",
+  "defaultValue": "Standard_D2als_v6",
+  "metadata": { "description": "VM-storlek. Kontrollera kvot med: az vm list-usage --location swedencentral" }
+}
+    
+  },
+
+  "variables": {
+    "nsgWebName": "[concat('nsg-', parameters('namePrefix'), '-web')]",
+    "vnetName": "[concat('vnet-', parameters('namePrefix'))]",
+    "subnetWebName": "snet-web",
+    "subnetWebPrefix": "10.20.1.0/24",
+    "vnetPrefix": "10.20.0.0/16",
+    "vmWebName": "[concat('vm-', parameters('namePrefix'), '-web')]",
+    "pipWebName": "[concat('pip-', variables('vmWebName'))]",
+    "nicWebName": "[concat('nic-', variables('vmWebName'))]",
+    "containerName": "arenden",
+    "blobContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]"
+  },
+
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2016-01-01",
+      "name": "[parameters('storageName')]",
+      "location": "[parameters('location')]",
+      "sku": { "name": "Standard_LRS" },
+      "kind": "Storage"
+    },
+
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(parameters('storageName'), '/default/', variables('containerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageName'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-06-01",
+      "name": "[variables('nsgWebName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-web",
+            "properties": {
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRanges": ["80", "443"]
+            }
+          },
+          {
+            "name": "allow-ssh-myip",
+            "properties": {
+              "priority": 110,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "[parameters('adminIp')]",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2017-06-01",
+      "name": "[variables('vnetName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": ["[variables('vnetPrefix')]"]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetWebName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetWebPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('pipWebName')]",
+      "location": "[parameters('location')]",
+      "sku": { "name": "Standard" },
+      "properties": { "publicIPAllocationMethod": "Static" }
+    },
+
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('nicWebName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipWebName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetWebName'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipWebName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('vmWebName')]",
+      "location": "[parameters('location')]",
+      "identity": { "type": "SystemAssigned" },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicWebName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": { "vmSize": "[parameters('vmSize')]" },
+        "osProfile": {
+          "computerName": "[variables('vmWebName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "customData": "[parameters('cloudInitWebServer')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('sshPublicKey')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "ubuntu-24_04-lts",
+            "sku": "server",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            { "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicWebName'))]" }
+          ]
+        }
+      }
+    },
+
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[concat('Microsoft.Storage/storageAccounts/', parameters('storageName'), '/blobServices/default/containers/', variables('containerName'))]",
+      "name": "[guid(resourceGroup().id, parameters('storageName'), variables('containerName'), variables('vmWebName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('storageName'), 'default', variables('containerName'))]",
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmWebName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vmWebName')), '2023-09-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    }
+  ],
+
+  "outputs": {
+    "webserverPublikIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipWebName'))).ipAddress]"
+    },
+    "storageAccountNamn": {
+      "type": "string",
+      "value": "[parameters('storageName')]"
+    }
+  }
+}
+```
+
+## Parameter filens innehåll
+
+```
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": { "value": "novatrix" },
+    "location": { "value": "swedencentral" },
+    "storageName": { "value": "VÄLJ UNIKT NAMN FÖR LAGRING: stnovatrixXXX" },
+    "adminUsername": { "value": "azureuser" },
+    "sshPublicKey": { "value": "FYLL I VÄRDET FRÅN TERMINAL: ssh-keygen -y -f ~/novatrix-v38-key" },
+    "cloudInitWebServer": { "value": "FYLL I VÄRDET FRÅN TERMINAL: base64 -w 0 cloud-init.txt" },
+    "adminIp": { "value": "FYLL I VÄRDET FRÅN TERMINAL: curl ifconfig.me" },
+    "vmSize": { "value": "Standard_D2als_v6" }
+  }
+}
+```
+

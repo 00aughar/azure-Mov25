@@ -58,14 +58,17 @@
   },
 
   "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2016-01-01",
-      "name": "[parameters('storageName')]",
-      "location": "[parameters('location')]",
-      "sku": { "name": "Standard_LRS" },
-      "kind": "Storage"
-    },
+{
+  "type": "Microsoft.Storage/storageAccounts",
+  "apiVersion": "2016-01-01",
+  "name": "[parameters('storageName')]",
+  "location": "[parameters('location')]",
+  "sku": { "name": "Standard_LRS" },
+  "kind": "Storage",
+  "properties": {
+    "allowBlobPublicAccess": false
+  }
+},
 
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
