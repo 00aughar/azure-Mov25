@@ -136,3 +136,21 @@ ARM template *miljo-skelett.json* provisionerar: storage account + blob containe
 Parameter filen *miljo-skelett.parameters.json* definerar parmetetrar som är unika beroende på hur miljön ska byggas upp och körs ihop med ARM template *miljo-skelett.json*.
 
 VM Webservern byggs upp med *cloud-init.txt* som gör att ärendeformulär kan tas emot och lagras i blob storage.
+
+## Förberedelser innan användning av template
+
+För att templaten ska fungera behövs värden fyllas i inom parameter filen *miljo-skelett.parameters.json*. 
+
+sshPublicKey definerar det publika nyckelvärdet som behövs för att ansluta till webservern via SSH och ett nyckelpar kan behövs skapas innan med kommando: ```ssh-keygen -t rsa -b 4096 -f ~/novatrix-v38-key -N ""```
+
+cloudInitWebServer gör att konfigurationsfilen blir läsbar för Azure och kan läsas in för webserverns konfiguration. En ändring behövs även göras i cloud-init.txt filen på rad 36 som definerar lagringens namngivning exempel: *STORAGE_ACCOUNT = "stnovatrix652"*
+
+adminIp ger värdet på den lokala IP adressen. Värdet behövs för att NSG regeln för SSH ska godkänna anslutning till webserven.
+
+```   
+"sshPublicKey": { "value": "FYLL I VÄRDET FRÅN TERMINAL: ssh-keygen -y -f ~/novatrix-v38-key" },
+
+"cloudInitWebServer": { "value": "FYLL I VÄRDET FRÅN TERMINAL: base64 -w 0 cloud-init.txt" },
+
+"adminIp": { "value": "FYLL I VÄRDET FRÅN TERMINAL: curl ifconfig.me" },
+```
