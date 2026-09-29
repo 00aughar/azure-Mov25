@@ -60,11 +60,11 @@
   "resources": [
 {
   "type": "Microsoft.Storage/storageAccounts",
-  "apiVersion": "2016-01-01",
+  "apiVersion": "2023-01-01",
   "name": "[parameters('storageName')]",
   "location": "[parameters('location')]",
   "sku": { "name": "Standard_LRS" },
-  "kind": "Storage",
+  "kind": "StorageV2",
   "properties": {
     "allowBlobPublicAccess": false
   }
