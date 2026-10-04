@@ -8,7 +8,7 @@
 
 # Formulär via container
 
-Containern byggs upp via molnet via *Dockerfile* i veckans repo. Filen har tre rader kod som förklaras nedan.
+Containern byggs upp via molnet via imagen *Dockerfile* i veckans repo. Filen har tre rader kod som förklaras nedan.
 
 
 1. Anger image som ska utgås ifrån i detta fall nginx med alpine linuxdisturbiton. 
@@ -82,6 +82,22 @@ Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod
 En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp i kod på ungefär 250 rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
 
 
-VG
+## VG
 Novatrix behov, kostnad, skalbarhet och drift, och
 beskriv hur du skulle optimera lösningen.
+
+## Novatrix behov
+Jag valde en Container lösing utifrån Novatrix behov. Ett formulär som kan nås utav kunder och mottagning av svaren. Belastningen borde vara ojämn där fler ärenden sker under dagstid på veckodagar medans lägre aktivitet sker på nätter och helger. Lösningen kräver ingen komplicerad lösning och ska vara enkel att driftsätta.
+
+## Lösning val
+Jag valde att använda en Container lösning för Novatrix behov. Formulärsidan körs i en container på Azure Container Instances (ACI) och byggs på en image *Dockerfile* i veckans repo. Jag har även byggt webbformuläret i en VM lösning med egen kod IaC. Container ger samma reslutat för webformuläret men med betydligt minre driftarbete/kod.
+
+## Drift
+Containern byggs upp en gång via imagen *Dockerfile* och driftsätts med kommandon som jag använt i denna veckans README dokumentation. Formulärsidan byggs upp och ligger sedan tillgänglig. Jag behöver inte underhålla operativsystem, patchning eller ssh. 
+
+## Kostnad
+Containern kostar likt VM baserat på allokerad processor och minnesanvändning. En aktiv container kostar oavsett om ingen besöker formulärsidan. Däremot sparar Container lösningen in på driftunderhållskostnader då inget operativssystem behöver underhållas. En serverless lösning hade kunnat vara mer befogad för formuläret beroende på hur trafikbesöken hade sett ut, en hög mängd besök hade också kunnat medföra en högre kostnad då man får betala för varje körning av tjänsten i serverless lösningen.
+
+## Skalbarhet
+
+
