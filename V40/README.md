@@ -79,7 +79,18 @@ Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod
 
 ## Jämförselse och skillnader
 
-En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp i kod på ungefär 250 rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
+| | VM | Container (ACI) | Serverless (Azure Function) |
+|---|---|---|---|
+| **Kort beskrivning** | En hel virtuell server med eget operativsystem | En paketerad image som körs utan eget operativsystem att sköta | Bara kod som körs när något anropar den |
+| **Vad jag hanterar själv** | Operativsystem, patchning, SSH, installation av paket, konfiguration, appen | Imagen (Dockerfile), appen och registret | Själva koden |
+| **Vad Azure hanterar** | Den fysiska maskinen och virtualiseringen | Servern och körmiljön under containern | Servrar, operativsystem, körmiljö och skalning |
+| **Kostnadsmodell** | Betalar för kapacitet så länge den är igång, även när ingen använder den | Betalar per sekund för allokerad processor och minne så länge den kör, plus registrets fasta dagsavgift | Betalar per körning, så en tom natt kostar inget |
+| **Skalning** | Byta storlek eller lägga till fler servrar | Skalar inte av sig själv, fler instanser måste startas | Plattformen startar fler instanser vid behov |
+| **Uppstart och driftsättning** | Långsammast, hela servern sätts upp med skript (`cloud-init`) | Bygger imagen en gång och startar den med ett kommando | Lägger upp koden, ingen server eller image |
+| **Min egen erfarenhet** | Byggd i v38: cirka 250 rader `cloud-init` med Flask, nginx och tjänster. Felsökte bland annat en beroendekonflikt | Byggd denna vecka: Dockerfile på 3 rader, men den serverar bara formulärsidan (ingen `/submit`) | Inte byggd, beskriven utifrån dokumentation |
+| **Passar ärendemottagningen?** | Fungerar, men mycket drift för en liten uppgift | Fungerar för sidan, men mottagningen saknas i min container | Passar bäst: liten, händelsestyrd, används ojämnt |
+
+En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp samt resurser i kod i ett hundratal rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
 
 
 ## VG
