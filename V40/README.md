@@ -6,9 +6,22 @@
 **MOV25** 
 **x/x**
 
+# Formulär via container
+
+Containern byggs upp via molnet via *Dockerfile* i veckans repo. Filen har tre rader kod som förklaras nedan.
 
 
+1. Anger image som ska utgås ifrån i detta fall nginx med alpine linuxdisturbiton. 
+2. Kopierar formulärsidan som finns i veckans repo *index.html*
+3. Anger att containern ska lyssna på port 80 
+```
+FROM nginx:alpine
 
+COPY index.html /usr/share/nginx/html/index.html
+
+EXPOSE 80
+```
+# Körning av container
 
 Skapa acr register i resursgrupp *rg-novatrix* och namnge till *novatrixacr652*.
 
@@ -64,7 +77,9 @@ Container - För en lätt & snabb driftsättning som är portabel. Formuläret t
 
 Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod. Underhåll och drift försvinner och blir enkel att hålla igång. Kostnad per körning, passar för tjänster som inte behöver nås konstant
 
-Skillnader
+## Jämförselse och skillnader
+
+En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp i kod på ungefär 250 rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
 
 
 VG
