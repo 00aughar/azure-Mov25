@@ -99,5 +99,9 @@ Containern byggs upp en gång via imagen *Dockerfile* och driftsätts med komman
 Containern kostar likt VM baserat på allokerad processor och minnesanvändning. En aktiv container kostar oavsett om ingen besöker formulärsidan. Däremot sparar Container lösningen in på driftunderhållskostnader då inget operativssystem behöver underhållas. En serverless lösning hade kunnat vara mer befogad för formuläret beroende på hur trafikbesöken hade sett ut, en hög mängd besök hade också kunnat medföra en högre kostnad då man får betala för varje körning av tjänsten i serverless lösningen.
 
 ## Skalbarhet
+En enskild Container skalar inte av sig själv. Om en högre belastning på webformuläret skulle inträffa hade fler instanser behövts startas eller en annan tjänst byggas upp. För Novatrix nuvarande behov i en testmiljö räcker en instans. 
 
+## Optimering
+
+En optimerad lösning är att kombinera nivåerna. Formulärsidan fortsätter att köras i en container, som är enkel att driftsätta och alltid nåbar. Mottagningen av ärendet flyttas till en serverless Azure Function som anropas när formuläret skickas in. Funktionen sparar ärendet i samma Blob-container som idag, så att Power Automate-flödet fortsätter fungera. På så sätt betalar jag för mottagningen bara när ett ärende kommer, och slipper hålla en server igång för den.
 
