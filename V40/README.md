@@ -71,11 +71,11 @@ Resultat:
 
 Virtualiseringsnivåerna
 
-VM - Hög kontroll men mycket egen drift, egna skript och underhåll samt uppbyggnad av resurser. Tar längre tid att starta upp från grunden. Kostar hela tiden medans den är aktiv, dyrare i längden då den debiteras även när den är overksam.
+VM - Hög kontroll men mycket egen drift, egna skript och underhåll samt uppbyggnad av resurser. Tar längre tid att starta upp från grunden. Kostar hela tiden medans den är aktiv då den debiteras även när den är overksam.
 
 Container - För en lätt & snabb driftsättning som är portabel. Formuläret tillgänglig för användare. Balans mellan självkontroll och ingen kontroll. Kostnaden baseras på allokerade resurser, container som är aktiv kostar lika mycket även om den inte tar emot ärenden. Däremot sparas kostnader för driftunderhåll då vi slipper hantera ett operativsystem på en VM.
 
-Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod. Underhåll och drift försvinner och blir enkel att hålla igång. Kostnad per körning, passar för tjänster som inte behöver nås konstant.
+Azure Functions Serverless - Ingen servern behövs och blir endast en tjänst uppbyggd på en funktion i kod som sedan körs i molnet. Då ingen server behövs, försvinner behovet av underhåll och drift och blir enkel att hålla igång. Fukntionen kostar per körning, passar för tjänster som inte behöver nås konstant. Exempelvis skicka formuläret.
 
 ## Jämförselse och skillnader
 
@@ -89,7 +89,7 @@ Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod
 | **Uppstart och driftsättning** | Långsammast, hela servern och resurser sätts upp med skript (`miljo-skelett.json`)(`miljo-skelett-parameters.json`) (`cloud-init`) | Bygger imagen en gång (`Dockerfile`) och startar den med ett kommando | Lägger upp koden, ingen server eller image |
 | **Passar ärendemottagningen?** | Fungerar, men mycket drift för en liten uppgift | Fungerar för sidan, men mottagningen saknas i min container | Passar bäst: liten, händelsestyrd, används ojämnt |
 
-En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp samt resurser i kod i ett hundratal rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
+En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp samt resurser i kod på 471 rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
 
 
 # VG
