@@ -21,7 +21,7 @@ COPY index.html /usr/share/nginx/html/index.html
 
 EXPOSE 80
 ```
-# Körning av container
+## Körning av container
 
 Skapa acr register i resursgrupp *rg-novatrix* och namnge till *novatrixacr652*.
 
@@ -29,24 +29,24 @@ Skapa acr register i resursgrupp *rg-novatrix* och namnge till *novatrixacr652*.
 az acr create --resource-group rg-novatrix --name novatrixacr652 --sku basic
 ```
 
-Bygg imagen i molnet
+## Bygg imagen i molnet
 ```
 az acr build --registry novatrixacr652 --image novatrix-app:v1 .
 ```
 
-Verifiera
+## Verifiera
 ```
 az acr repository list --name novatrixacr652 --output table
 ```
 ![alt text](Verifiera.png)
 
-Aktivera adminanvändare på ACR
+## Aktivera adminanvändare på ACR
 
 ```
 az acr update --name novatrixacr652 --admin-enabled true
 ```
 
-Kör containern
+## Kör containern
 ```
 ACR_PW=$(az acr credential show --name novatrixacr652 --query "passwords[0].value" -o tsv)
 
@@ -57,7 +57,7 @@ az container create --resource-group rg-novatrix --name novatrix-app \
   --registry-username novatrixacr652 --registry-password "$ACR_PW"
 ```
 
-Hämta addresen och besök formulärsidan
+## Hämta addresen och besök formulärsidan
 
 ```
 novatrix-app-652.swedencentral.azurecontainer.io
@@ -71,11 +71,11 @@ Resultat:
 
 Virtualiseringsnivåerna
 
-VM - Hög kontroll men mycket egen drift, egna skript och underhåll. Tar längre tid att starta upp från grunden. Körtid per sekund när den är aktiv, dyrare i längden då den debiteras även när den är overkasam
+VM - Hög kontroll men mycket egen drift, egna skript och underhåll samt uppbyggnad av resurser. Tar längre tid att starta upp från grunden. Kostar hela tiden medans den är aktiv, dyrare i längden då den debiteras även när den är overksam.
 
-Container - För en lätt & snabb driftsättning som är portabel. Formuläret tillgänglig för användare. Balans mellan självkontroll och ingen kontroll. Kostnaden baseras på allokerade resurser, container som är aktiv kostar lika mycket även om den inte tar emot ärenden. Däremot sparas kostnader för driftunderhåll då vi slipper hantera ett operativsystem.
+Container - För en lätt & snabb driftsättning som är portabel. Formuläret tillgänglig för användare. Balans mellan självkontroll och ingen kontroll. Kostnaden baseras på allokerade resurser, container som är aktiv kostar lika mycket även om den inte tar emot ärenden. Däremot sparas kostnader för driftunderhåll då vi slipper hantera ett operativsystem på en VM.
 
-Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod. Underhåll och drift försvinner och blir enkel att hålla igång. Kostnad per körning, passar för tjänster som inte behöver nås konstant
+Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod. Underhåll och drift försvinner och blir enkel att hålla igång. Kostnad per körning, passar för tjänster som inte behöver nås konstant.
 
 ## Jämförselse och skillnader
 
@@ -84,18 +84,15 @@ Serverless - Tar bort servern och blir endast en tjänst endast uppbyggd på kod
 | **Kort beskrivning** | En hel virtuell server med eget operativsystem | En paketerad image som körs utan eget operativsystem att sköta | Bara kod som körs när något anropar den |
 | **Vad jag hanterar själv** | Operativsystem, patchning, SSH, installation av paket, konfiguration, appen | Imagen (Dockerfile), appen och registret | Själva koden |
 | **Vad Azure hanterar** | Den fysiska maskinen och virtualiseringen | Servern och körmiljön under containern | Servrar, operativsystem, körmiljö och skalning |
-| **Kostnadsmodell** | Betalar för kapacitet så länge den är igång, även när ingen använder den | Betalar per sekund för allokerad processor och minne så länge den kör, plus registrets fasta dagsavgift | Betalar per körning, så en tom natt kostar inget |
+| **Kostnadsmodell** | Betalar för kapacitet så länge den är igång, även när ingen använder den | Betalar per sekund för allokerad processor och minne så länge den kör | Betalar per körning, mer ekonomiskt om tjänsten inte används aktivt dygnet runt |
 | **Skalning** | Byta storlek eller lägga till fler servrar | Skalar inte av sig själv, fler instanser måste startas | Plattformen startar fler instanser vid behov |
-| **Uppstart och driftsättning** | Långsammast, hela servern sätts upp med skript (`cloud-init`) | Bygger imagen en gång och startar den med ett kommando | Lägger upp koden, ingen server eller image |
-| **Min egen erfarenhet** | Byggd i v38: cirka 250 rader `cloud-init` med Flask, nginx och tjänster. Felsökte bland annat en beroendekonflikt | Byggd denna vecka: Dockerfile på 3 rader, men den serverar bara formulärsidan (ingen `/submit`) | Inte byggd, beskriven utifrån dokumentation |
+| **Uppstart och driftsättning** | Långsammast, hela servern och resurser sätts upp med skript (`miljo-skelett.json`)(`miljo-skelett-parameters.json`) (`cloud-init`) | Bygger imagen en gång (`Dockerfile`) och startar den med ett kommando | Lägger upp koden, ingen server eller image |
 | **Passar ärendemottagningen?** | Fungerar, men mycket drift för en liten uppgift | Fungerar för sidan, men mottagningen saknas i min container | Passar bäst: liten, händelsestyrd, används ojämnt |
 
 En tydligt konkret exempel på skillnaden i hur uppbyggnad av webforumläret är mellan VM och Container är skillnaden i mängden kod om man jämför vecka 38 (IaC) moment med denna veckas Container kommando. Under IaC veckan behövdes VM installera paket, konfigrationsfiler och tjänster byggas upp samt resurser i kod i ett hundratal rader medans denna vecka där samma formulär byggs upp med dockerfilen har 3 rader kod.
 
 
-## VG
-Novatrix behov, kostnad, skalbarhet och drift, och
-beskriv hur du skulle optimera lösningen.
+# VG
 
 ## Novatrix behov
 Jag valde en Container lösing utifrån Novatrix behov. Ett formulär som kan nås utav kunder och mottagning av svaren. Belastningen borde vara ojämn där fler ärenden sker under dagstid på veckodagar medans lägre aktivitet sker på nätter och helger. Lösningen kräver ingen komplicerad lösning och ska vara enkel att driftsätta.
