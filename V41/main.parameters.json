@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": { "value": "nordvik" },
+    "userName": { "value": "FYLL I DITT ANVANDARNAMN (gemener/siffror, 3-10 tecken)" },
+    "storageSuffix": { "value": "01" },
+    "location": { "value": "swedencentral" },
+    "tags": {
+      "value": {
+        "foretag": "nordvik",
+        "projekt": "hyresgastportal",
+        "avdelning": "forvaltning",
+        "miljo": "test"
+      }
+    },
+    "adminIp": { "value": "FYLL I FRAN TERMINAL: curl ifconfig.me" },
+    "adminUsername": { "value": "azureuser" },
+    "sshPublicKey": { "value": "FYLL I FRAN TERMINAL: ssh-keygen -y -f ~/din-nyckel" },
+    "cloudInitWebServer": { "value": "FYLL I FRAN TERMINAL: base64 -w 0 cloud-init-nordvik.txt" },
+    "vmSize": { "value": "Standard_D2als_v6" },
+    "vnetPrefix": { "value": "10.40.0.0/16" },
+    "snetWebPrefix": { "value": "10.40.1.0/24" },
+    "snetDataPrefix": { "value": "10.40.2.0/24" },
+    "dokumentCoolAfterDays": { "value": 90 },
+    "forvaltareGroupId": { "value": "az ad group show --group grp-nordvik-forvaltare --query id -o tsv" },
+    "ekonomiGroupId": { "value": "az ad group show --group grp-nordvik-ekonomi --query id -o tsv" }
+  }
+}

@@ -1,0 +1,346 @@
+#cloud-config
+# Nordvik Fastigheter AB: web VM that serves the fault-report form (felanmalan)
+# AND writes each report to Blob Storage via the VM's managed identity.
+# No account key is used. Pure ASCII on purpose, so the file survives cloud-init.
+package_update: true
+
+packages:
+  - nginx
+  - python3
+  - python3-pip
+
+write_files:
+  - path: /opt/felanmalan/app.py
+    owner: root:root
+    permissions: '0644'
+    content: |
+      # -*- coding: ascii -*-
+      # Nordvik felanmalan backend.
+      # Receives a fault report (title, description, category, property, reporter
+      # and an optional image) and stores it in Blob Storage using the VM's managed
+      # identity. The report is saved as arende-<id>.json, the image next to it.
+      #
+      # Change STORAGE_ACCOUNT below to your own storage account name (the one the
+      # ARM template created: st + nordvik + your username + 01).
+
+      import json
+      import uuid
+      import urllib.request
+      from datetime import datetime, timezone
+
+      from flask import Flask, request, Response
+      from werkzeug.utils import secure_filename
+      from azure.identity import DefaultAzureCredential
+      from azure.storage.blob import BlobServiceClient, ContentSettings
+
+      # --- Settings to change ------------------------------------------------------
+      # Your globally unique storage account name (just the name, no https).
+      STORAGE_ACCOUNT = "stnordvik00aughar01"
+      # Container that receives the reports (created by the ARM template).
+      CONTAINER = "anmalningar"
+      # Where the report lands in the container:
+      #   "root"   -> arende-<id>.json flat in the container root
+      #   "folder" -> <id>/arende.json in a folder per report
+      BLOB_LAYOUT = "root"
+      # Optional Power Automate HTTP trigger URL. Leave empty to skip. When set, the
+      # app POSTs the report JSON to this URL right after saving it. Useful because
+      # the storage firewall blocks the Blob trigger from reaching the container.
+      FLOW_URL = ""
+      # Optional: client id of the user-assigned managed identity. Leave empty to let
+      # Azure pick the VM's only identity. Fill in if the credential fails to find it
+      # (the ARM template prints it as the output portalIdentityClientId).
+      MANAGED_IDENTITY_CLIENT_ID = ""
+      # ----------------------------------------------------------------------------
+
+      # Categories the form offers. Urgent ones also trigger an instant e-mail in
+      # the Power Automate flow (the flow reads the "urgent" field).
+      ALLOWED_CATEGORIES = ("varme", "vatten", "las", "el", "ovrigt")
+      URGENT_CATEGORIES = ("varme", "vatten", "las")
+
+      ACCOUNT_URL = "https://{0}.blob.core.windows.net".format(STORAGE_ACCOUNT)
+
+      app = Flask(__name__)
+
+      # One credential and one client for the whole app. DefaultAzureCredential picks
+      # up the VM's managed identity through IMDS, so no secret exists in the code.
+      if MANAGED_IDENTITY_CLIENT_ID:
+          _credential = DefaultAzureCredential(
+              managed_identity_client_id=MANAGED_IDENTITY_CLIENT_ID
+          )
+      else:
+          _credential = DefaultAzureCredential()
+      _blob_service = BlobServiceClient(account_url=ACCOUNT_URL, credential=_credential)
+
+
+      def _container():
+          return _blob_service.get_container_client(CONTAINER)
+
+
+      def _clean(value, max_len):
+          # Strip whitespace and cut the text to a sane length.
+          return (value or "").strip()[:max_len]
+
+
+      def _page(title, body_html, status=200):
+          # A tiny ASCII-only HTML page, so the file survives cloud-init.
+          html = (
+              "<!DOCTYPE html><html lang='sv'><head><meta charset='UTF-8'>"
+              "<title>{0}</title></head>"
+              "<body style='font-family:Arial;max-width:640px;margin:40px auto'>"
+              "{1}</body></html>"
+          ).format(title, body_html)
+          return Response(html, status=status, mimetype="text/html")
+
+
+      def _blob_names(ticket_id, image_filename):
+          # Returns (report_blob_name, image_blob_name) for the chosen layout.
+          # image_blob_name is None when no image was attached.
+          if BLOB_LAYOUT == "folder":
+              ticket_name = "{0}/arende.json".format(ticket_id)
+              image_name = "{0}/{1}".format(ticket_id, image_filename) if image_filename else None
+          else:
+              ticket_name = "arende-{0}.json".format(ticket_id)
+              image_name = "{0}-{1}".format(ticket_id, image_filename) if image_filename else None
+          return ticket_name, image_name
+
+
+      def _notify_flow(ticket):
+          # If a flow URL is configured, POST the report JSON to it. Wrapped in
+          # try/except so a broken flow never stops the report from being saved.
+          if not FLOW_URL:
+              return
+          try:
+              data = json.dumps(ticket, ensure_ascii=False).encode("utf-8")
+              req = urllib.request.Request(
+                  FLOW_URL,
+                  data=data,
+                  headers={"Content-Type": "application/json"},
+                  method="POST",
+              )
+              urllib.request.urlopen(req, timeout=10)
+          except Exception:
+              pass
+
+
+      @app.post("/submit")
+      def submit():
+          # Read the fields from the form. The names must match index.html.
+          title = _clean(request.form.get("title"), 120)
+          description = _clean(request.form.get("description"), 2000)
+          category = _clean(request.form.get("category"), 20).lower()
+          property_name = _clean(request.form.get("property"), 120)
+          name = _clean(request.form.get("name"), 120)
+          mail = _clean(request.form.get("mail"), 200)
+          image = request.files.get("bild")
+
+          if not title or not description or not property_name:
+              return _page(
+                  "Fel",
+                  "<h1>Fel</h1><p>Rubrik, beskrivning och fastighet maste fyllas i.</p>"
+                  "<p><a href='/'>Tillbaka</a></p>",
+                  status=400,
+              )
+          if category not in ALLOWED_CATEGORIES:
+              category = "ovrigt"
+
+          # Only accept image files. secure_filename keeps the blob name safe.
+          image_filename = None
+          if image is not None and image.filename:
+              if not (image.mimetype or "").startswith("image/"):
+                  return _page(
+                      "Fel",
+                      "<h1>Fel</h1><p>Bara bildfiler tillats som bilaga.</p>"
+                      "<p><a href='/'>Tillbaka</a></p>",
+                      status=400,
+                  )
+              image_filename = secure_filename(image.filename) or "bild"
+
+          # A unique id per report: UTC timestamp plus a short random suffix.
+          stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+          ticket_id = "{0}-{1}".format(stamp, uuid.uuid4().hex[:8])
+
+          ticket_name, image_name = _blob_names(ticket_id, image_filename)
+
+          ticket = {
+              "id": ticket_id,
+              "title": title,
+              "description": description,
+              "category": category,
+              "urgent": category in URGENT_CATEGORIES,
+              "property": property_name,
+              "name": name,
+              "mail": mail,
+              "status": "Ny",
+              "created": stamp,
+              "image": image_name or "",
+          }
+
+          container = _container()
+
+          # 1) Store the report itself as a JSON blob.
+          container.upload_blob(
+              name=ticket_name,
+              data=json.dumps(ticket, ensure_ascii=False).encode("utf-8"),
+              overwrite=True,
+              content_settings=ContentSettings(content_type="application/json"),
+          )
+
+          # 2) Store the attached image next to it, if one was sent.
+          if image_name is not None:
+              container.upload_blob(
+                  name=image_name,
+                  data=image.stream,
+                  overwrite=True,
+              )
+
+          # 3) Optionally notify a Power Automate HTTP flow. Never blocks the save.
+          _notify_flow(ticket)
+
+          return _page(
+              "Tack",
+              "<h1>Tack!</h1>"
+              "<p>Din felanmalan ar sparad med id <code>{0}</code>.</p>"
+              "<p><a href='/'>Gor en ny anmalan</a></p>".format(ticket_id),
+          )
+
+
+      @app.get("/health")
+      def health():
+          # Handy for a quick check that the backend is up and reading its config.
+          return {
+              "status": "ok",
+              "account": STORAGE_ACCOUNT,
+              "container": CONTAINER,
+              "blob_layout": BLOB_LAYOUT,
+              "flow_configured": bool(FLOW_URL),
+          }
+
+
+      if __name__ == "__main__":
+          # Bind to localhost only. nginx sits in front and proxies /submit to here.
+          app.run(host="127.0.0.1", port=5000)
+
+
+  - path: /var/www/html/index.html
+    owner: root:root
+    permissions: '0644'
+    content: |
+      <!DOCTYPE html>
+      <html lang="sv">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nordvik felanm&auml;lan</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1f2d3d; }
+          h1 { color: #1b5e4a; }
+          p { color: #4a5568; }
+          form { display: grid; gap: 12px; margin-top: 24px; }
+          label { font-weight: bold; }
+          input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; font-family: inherit; }
+          button { width: 180px; padding: 10px; background: #1b5e4a; color: #fff; border: none; cursor: pointer; }
+          .hint { font-size: 0.9em; color: #6b7280; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <h1>Nordvik Fastigheter &ndash; felanm&auml;lan</h1>
+        <p>Anm&auml;l ett fel i din bostad eller lokal s&aring; &aring;terkommer vi s&aring; snart vi kan.</p>
+        <form action="/submit" method="post" enctype="multipart/form-data">
+          <label for="title">Rubrik</label>
+          <input type="text" id="title" name="title" maxlength="120" required>
+
+          <label for="category">Kategori</label>
+          <select id="category" name="category" required>
+            <option value="">V&auml;lj kategori</option>
+            <option value="varme">V&auml;rme</option>
+            <option value="vatten">Vatten</option>
+            <option value="las">L&aring;s</option>
+            <option value="el">El</option>
+            <option value="ovrigt">&Ouml;vrigt</option>
+          </select>
+          <p class="hint">V&auml;rme, vatten och l&aring;s behandlas som akuta fel.</p>
+
+          <label for="property">Fastighet / l&auml;genhet</label>
+          <input type="text" id="property" name="property" maxlength="120" required>
+
+          <label for="description">Beskrivning</label>
+          <textarea id="description" name="description" rows="5" maxlength="2000" required></textarea>
+
+          <label for="bild">Bild p&aring; felet (valfri)</label>
+          <input type="file" id="bild" name="bild" accept="image/*">
+
+          <label for="name">Ditt namn</label>
+          <input type="text" id="name" name="name" maxlength="120">
+
+          <label for="mail">E-post</label>
+          <input type="email" id="mail" name="mail" maxlength="200">
+
+          <button type="submit">Skicka anm&auml;lan</button>
+        </form>
+      </body>
+      </html>
+
+
+  - path: /etc/nginx/sites-available/default
+    owner: root:root
+    permissions: '0644'
+    content: |
+      # nginx site for the Nordvik fault-report form.
+      # nginx serves the static page and reverse-proxies /submit to the Flask backend.
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+
+          root /var/www/html;
+          index index.html;
+
+          # Allow image uploads (reports usually carry a 2-5 MB photo).
+          client_max_body_size 10m;
+
+          location / {
+              try_files $uri $uri/ =404;
+          }
+
+          # The form posts here; hand it to the backend that owns the managed identity.
+          location = /submit {
+              proxy_pass http://127.0.0.1:5000/submit;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+          }
+      }
+
+
+  - path: /etc/systemd/system/felanmalan.service
+    owner: root:root
+    permissions: '0644'
+    content: |
+      # systemd unit for the Flask backend.
+      # Keeps the fault-report backend running and restarts it if it stops.
+      [Unit]
+      Description=Nordvik felanmalan backend (Flask)
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      WorkingDirectory=/opt/felanmalan
+      ExecStart=/usr/bin/python3 /opt/felanmalan/app.py
+      Restart=on-failure
+      User=www-data
+
+      [Install]
+      WantedBy=multi-user.target
+
+
+runcmd:
+  # Install the Azure SDK bits the backend needs (system-wide).
+  # --ignore-installed avoids a conflict where pip tries (and fails) to
+  # uninstall the apt-managed 'blinker' package before installing flask's
+  # own copy. Without this flag the whole install aborts and flask/azure
+  # never get installed, so the service crashes with ModuleNotFoundError.
+  - pip3 install --break-system-packages --ignore-installed flask azure-identity azure-storage-blob
+  # Start the backend and make sure it comes back on reboot.
+  - systemctl daemon-reload
+  - systemctl enable --now felanmalan
+  # (Re)load nginx so it serves the page and proxies /submit to the backend.
+  - systemctl enable --now nginx
+  - systemctl restart nginx
