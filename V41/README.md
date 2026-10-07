@@ -98,8 +98,31 @@ Rollerna följer least privilege. Varje identitet får lägsta möjliga rättigh
 ## Hanterad identitet
 Portalen använder en användartilldelad hanterad identitet i stället för nycklar. Nyckelåtkomst är dessutom avstängd (allowSharedKeyAccess: false), så identiteten är det enda sättet för appen att nå lagringen.
 
+## Verifiering och bildbevis
+
 Kontroll rolltilldening:
 ![alt text](<rolltilldelningar bevis.png>)
+
+anmalningar IAM:
+![alt text](<anmälningar IAM.png>)
+
+Ekonomi användare åtkomst anmalningar:
+![alt text](<anmälningar legolas åtkomst.png>)
+
+Förvaltare användare åtkomst anmalningar:
+![alt text](<anmälningar anna åtkomst.png>)
+
+Ekonomi användare åtkomst dokument:
+![alt text](<dokument åtkomst legolas.png>)
+
+Förvaltare användare åtkomst dokument:
+![alt text](<dokument åtkomst anna.png>)
+
+Medlemmar ekonomi:
+![alt text](<ekonomi medlem.png>)
+
+Medlemmar förvaltare:
+![alt text](<förvaltare medlem.png>)
 
 # Delmoment 3, Nätverk och säkerhet
 Bygg ett säkert nätverk runt lösningen med defense in depth. Portalen är publikt nåbar, medan lagringen av
