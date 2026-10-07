@@ -31,3 +31,36 @@ az deployment group what-if --resource-group rg-nordvik \
 az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
   --template-file main.json --parameters @main.parameters.json
 ```
+
+Del A, Dokumentation
+Redogör för de centrala Azure-tjänster du använder inom Compute, nätverk och storage, och förklara
+virtualiseringsnivåerna VM, containers och serverless samt vilken nivå du valt för Nordviks portal och varför.
+
+Del B, Praktisk lösning
+Planera och implementera infrastrukturen för hyresgästportalen med felanmälan:
+
+Delmoment 1, Compute
+Provisionera värdmiljön för portalen och driftsätt sidan med felanmälningsformuläret (rubrik, beskrivning,
+bild).
+
+Delmoment 2, IAM
+Konfigurera identiteter och behörigheter för Nordviks roller enligt least privilege: hyresgäst ser och skapar
+sina egna anmälningar, förvaltare hanterar dem, ekonomi har läsande insyn. Ge även portalen en hanterad
+identitet för att nå lagringen.
+
+Delmoment 3, Nätverk och säkerhet
+Bygg ett säkert nätverk runt lösningen med defense in depth. Portalen är publikt nåbar, medan lagringen av
+anmälningar och bilder ligger skyddad.
+
+Delmoment 4, Storage
+Koppla säker lagring för portalens dokument och bilder, så att en felanmälan med bild kan sparas.
+
+Delmoment 5, IaC
+Provisionera lösningen med ARM-templates, versionshanterat i GitHub, så att den kan återskapas från repot.
+
+Delmoment 6, Automation och integration
+Bygg ett arbetsflöde med Power Automate som integrerar Nordviks Microsoft 365: en inskickad felanmälan skapar
+en post i en SharePoint-lista och en notis till förvaltaren i Teams eller Outlook.
+
+Delmoment 7, Dokumentation
+Beskriv hur lösningen planerats, implementerats och kan återskapas.
