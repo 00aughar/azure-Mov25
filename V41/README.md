@@ -48,12 +48,18 @@ Webformulär > Blob Container > PowerAutomate flöde > Sharepoint lista >
 Provisionera värdmiljön för portalen och driftsätt sidan med felanmälningsformuläret (rubrik, beskrivning,
 bild).
 
+Resursgrupp - *rg-nordvik*
+VM - *vm-nordvik-web*
+
+
 Värdmiljön för felanmälningsformuläret byggdes upp med konfigurationsfilen *cloud-init-nordvik.txt*. Konfigurationsfilen bygger webformuläret och applikationen i bakrunden som tar emot skickade formulär och bilder som sedan skickas vidare till blob-container *anmalningar*.
 
 # Delmoment 2, IAM
 Konfigurera identiteter och behörigheter för Nordviks roller enligt least privilege: hyresgäst ser och skapar
 sina egna anmälningar, förvaltare hanterar dem, ekonomi har läsande insyn. Ge även portalen en hanterad
 identitet för att nå lagringen.
+
+
 
 # Delmoment 3, Nätverk och säkerhet
 Bygg ett säkert nätverk runt lösningen med defense in depth. Portalen är publikt nåbar, medan lagringen av
@@ -68,6 +74,57 @@ Provisionera lösningen med ARM-templates, versionshanterat i GitHub, så att de
 # Delmoment 6, Automation och integration
 Bygg ett arbetsflöde med Power Automate som integrerar Nordviks Microsoft 365: en inskickad felanmälan skapar
 en post i en SharePoint-lista och en notis till förvaltaren i Teams eller Outlook.
+
+## Beskrivning av PowerAutomate flödet *nordvik-felanmälan-http*
+
+1. Trigger: När en HTTP-begäran tas emot (appen anropar flödets URL med anmälans JSON).
+2. Skapa objekt (SharePoint): skapar en post i listan Felanmälningar med rubrik, kategori, fastighet, beskrivning, anmälare, datum och bild.
+3. Publicera meddelande (Teams): notis till kanalen Förvaltare.
+4. Villkor: urgent är lika med sant.
+- Sant: Skicka e-post (V2) med ämnet "Akut ärende".
+- Falskt: ingen åtgärd.
+
+JSON schemat för trigger:
+```
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "category": {
+            "type": "string"
+        },
+        "urgent": {
+            "type": "boolean"
+        },
+        "property": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "mail": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "created": {
+            "type": "string"
+        },
+        "image": {
+            "type": "string"
+        }
+    }
+}
+```
 
 # Delmoment 7, Dokumentation
 Beskriv hur lösningen planerats, implementerats och kan återskapas.
