@@ -142,6 +142,7 @@ en post i en SharePoint-lista och en notis till förvaltaren i Teams eller Outlo
 
 1. Trigger: När en HTTP-begäran tas emot (appen anropar flödets URL med anmälans JSON).
 2. Skapa objekt (SharePoint): skapar en post i listan Felanmälningar med rubrik, kategori, fastighet, beskrivning, anmälare, datum och bild.
+3. Skicka e-post (V2) med ämnet "Vi har tagit emot din felanmälan" (Bekräftelse Hyresgäst)
 3. Publicera meddelande (Teams): notis till kanalen Förvaltare.
 4. Villkor: urgent är lika med sant.
 - Sant: Skicka e-post (V2) med ämnet "Akut ärende".
