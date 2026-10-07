@@ -86,8 +86,20 @@ identitet för att nå lagringen.
 ## Principen:
 Rollerna följer least privilege. Varje identitet får lägsta möjliga rättighet, på lägsta möjliga nivå. Alla roller är därför tilldelade på containernivå och inte på hela lagringskontot, och tilldelas grupper i stället för enskilda personer. Det gör att en ny förvaltare bara behöver läggas till i en grupp. Grupperna *grp-nordvik-forvaltare* och *grp-nordvik-ekonomi* skapades i Entra ID, och deras object-ID:n skickas in som parametrar till mallen (forvaltareGroupId, ekonomiGroupId).
 
-## 
+## Rollmodell
 
+| Roll | Identitet | Azure-roll | Scope | Motivering |
+|---|---|---|---|---|
+| Hyresgäst | Ingen Azure-identitet | Ingen | – | Hyresgäster når aldrig lagringen direkt, utan skickar anmälningar via formuläret. Appen skriver åt dem. |
+| Förvaltare | `grp-nordvik-forvaltare` | Storage Blob Data Contributor | `anmalningar` och `dokument` | Ska kunna läsa, skriva och hantera anmälningar och dokument. |
+| Ekonomi | `grp-nordvik-ekonomi` | Storage Blob Data Reader | `anmalningar` och `dokument` | Läsande insyn utan rätt att ändra eller ladda upp. |
+| Portalen | `id-nordvik-portal` (användartilldelad hanterad identitet) | Storage Blob Data Contributor | Endast `anmalningar` | Appen ska bara skriva anmälningar och bilder. Ingen åtkomst till `dokument`. |
+
+
+
+
+Kontroll rolltilldening:
+![alt text](<rolltilldelningar bevis.png>)
 
 # Delmoment 3, Nätverk och säkerhet
 Bygg ett säkert nätverk runt lösningen med defense in depth. Portalen är publikt nåbar, medan lagringen av
