@@ -58,7 +58,7 @@ Tjänsten och nivå val: Jag valde att bygga portalen på en virtuell maskin i A
 
 Konfigurationen: Maskinen konfigureras upp automatiskt med cloud-init filen *cloud-init-nordvik.txt* som skickas med i ARM-mallen *main.json* och tillhörande parameterfil *main.parameters.json*. Cloud-init filen konfigurerar Python bibliotken (flask, azure-identity och azure-storage-blob), lägger ut applikationen och registrerar den som tjänsten *felanmalan.service*. En ny VM blir därav identiskt konfigurerad om den behöver byggas upp igen.
 
-Applikationen: 
+Applikationen: Formuläret som innehåller fält för: rubrik, kategori, fastighet, beskrivning, bild, namn & e-post som sedan tas emot av flask-appen i bakrunden. När anmälan skickas sparar appen innehållet i en JSON-fil *arende-<id>.json* i blob container *anmalningar* tillsammans med eventuell bild. Väljs någon av följande kategorier i bifogat formulär "värme, vatten & lås" markeras dem som akuta (urgent) som appen anropar vidare till power-automate flödet *nordvik-felanmälan-http* som sedan sköter notis och SharePoint listan.
 
 # Delmoment 2, IAM
 Konfigurera identiteter och behörigheter för Nordviks roller enligt least privilege: hyresgäst ser och skapar
