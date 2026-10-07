@@ -54,6 +54,10 @@ VM - *vm-nordvik-web*
 
 Värdmiljön för felanmälningsformuläret byggdes upp med konfigurationsfilen *cloud-init-nordvik.txt*. Konfigurationsfilen bygger webformuläret och applikationen i bakrunden som tar emot skickade formulär och bilder som sedan skickas vidare till blob-container *anmalningar*.
 
+Tjänsten och nivå val: Jag valde att bygga portalen på en virtuell maskin i Azure portalen *vm-nordvik-web*, Storlek *Standard D2als v6 (2 vcpus, 4 GiB memory)* med Operativsystemet *ubuntu-24_04-lts*. VMen är en IaaS tjänst, Azure sköter den fysiska hårdvaran medans jag sköter ansvar för operativsystemet, uppdateringar och applikationer. Jag valde VM lösningen för att lasten är låg med cirka 5-10 samtida användare med en topp vid 120. Hela miljön byggs upp med kod IaC. Begränsningarna med denna lösning tas upp i del A.
+
+Konfigurationen: 
+
 # Delmoment 2, IAM
 Konfigurera identiteter och behörigheter för Nordviks roller enligt least privilege: hyresgäst ser och skapar
 sina egna anmälningar, förvaltare hanterar dem, ekonomi har läsande insyn. Ge även portalen en hanterad
