@@ -95,8 +95,8 @@ Rollerna följer least privilege. Varje identitet får lägsta möjliga rättigh
 | Ekonomi | `grp-nordvik-ekonomi` | Storage Blob Data Reader | `anmalningar` och `dokument` | Läsande insyn utan rätt att ändra eller ladda upp. |
 | Portalen | `id-nordvik-portal` (användartilldelad hanterad identitet) | Storage Blob Data Contributor | Endast `anmalningar` | Appen ska bara skriva anmälningar och bilder. Ingen åtkomst till `dokument`. |
 
-
-
+## Hanterad identitet
+Portalen använder en användartilldelad hanterad identitet i stället för nycklar. Nyckelåtkomst är dessutom avstängd (allowSharedKeyAccess: false), så identiteten är det enda sättet för appen att nå lagringen.
 
 Kontroll rolltilldening:
 ![alt text](<rolltilldelningar bevis.png>)
