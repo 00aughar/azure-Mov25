@@ -239,6 +239,215 @@ JSON schemat för trigger:
 }
 ```
 
+Flödet i JSON format:
+```
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedsharepointonline_3acf8"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedteams_a2859"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365_7d1fc"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "triggerAuthenticationType": "All",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "urgent": {
+                  "type": "boolean"
+                },
+                "property": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "mail": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "created": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "Skapa_objekt": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://nordvikab.sharepoint.com/sites/NordvikFastigheterAB",
+              "table": "5d8336c1-1ca2-45f3-9607-75321f8b3b87",
+              "item/Title": "@triggerBody()?['title']",
+              "item/Kategori/Value": "@triggerBody()?['category']",
+              "item/Fastighet": "@triggerBody()?['property']",
+              "item/Status/Value": "Ej påbörjad",
+              "item/Akut": "@triggerBody()?['urgent']",
+              "item/Beskrivning": "@triggerBody()?['description']",
+              "item/Anmalare": "@triggerBody()?['name']",
+              "item/ArendeID": "@triggerBody()?['id']",
+              "item/AnmaldDatum": "@concat(substring(triggerBody()?['created'],0,4),'-',substring(triggerBody()?['created'],4,2),'-',substring(triggerBody()?['created'],6,2))",
+              "item/Bild": "@triggerBody()?['image']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "PostItem",
+              "connectionName": "shared_sharepointonline"
+            }
+          }
+        },
+        "Publicera_meddelande_i_en_chatt_eller_en_kanal": {
+          "runAfter": {
+            "Skicka_e-postmeddelande_(V2)_1": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "4074c96b-0828-4416-b3f8-3ae5aaa8ddd1",
+              "body/recipient/channelId": "19:b753907598cc46c098245194f81d39af@thread.tacv2",
+              "body/messageBody": "<p class=\"editor-paragraph\">Ny felanmälan: @{outputs('Skapa_objekt')?['body/Title']}<br>Kategori: @{outputs('Skapa_objekt')?['body/Kategori/Value']} | Fastighet: @{outputs('Skapa_objekt')?['body/Fastighet']}<br>Akut: @{outputs('Skapa_objekt')?['body/Akut']}<br>Anmäld av: @{outputs('Skapa_objekt')?['body/Anmalare']}<br>Ärende-id: @{outputs('Skapa_objekt')?['body/ArendeID']}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "operationId": "PostMessageToConversation",
+              "connectionName": "shared_teams"
+            }
+          }
+        },
+        "Villkor": {
+          "actions": {
+            "Skicka_e-postmeddelande_(V2)": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "August@NordvikAB.onmicrosoft.com",
+                  "emailMessage/Subject": "Akut ärende",
+                  "emailMessage/Body": "<p class=\"editor-paragraph\">Ny felanmälan: @{outputs('Skapa_objekt')?['body/Title']}<br>Kategori: @{outputs('Skapa_objekt')?['body/Kategori/Value']} | Fastighet: @{outputs('Skapa_objekt')?['body/Fastighet']}<br>Akut: @{outputs('Skapa_objekt')?['body/Akut']}<br>Anmäld av: @{outputs('Skapa_objekt')?['body/Anmalare']}<br>Ärende-id: @{outputs('Skapa_objekt')?['body/ArendeID']}</p>",
+                  "emailMessage/Importance": "Normal"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Publicera_meddelande_i_en_chatt_eller_en_kanal": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@triggerBody()?['urgent']",
+                  "@true"
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "Skicka_e-postmeddelande_(V2)_1": {
+          "runAfter": {
+            "Skapa_objekt": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "emailMessage/To": "@triggerBody()?['mail']",
+              "emailMessage/Subject": "Vi har tagit emot din felanmälan",
+              "emailMessage/Body": "<p class=\"editor-paragraph\">Hej din felanmälan: @{triggerBody()?['title']} har tagits emot.</p><br><br><p class=\"editor-paragraph\">Nordvik AB</p>",
+              "emailMessage/Importance": "Normal"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "SendEmailV2",
+              "connectionName": "shared_office365"
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
+```
+
 ## Bildbevis flöde
 ![alt text](<fungerande flöde.png>)
 
