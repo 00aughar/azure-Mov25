@@ -142,10 +142,21 @@ Den som tar sig förbi nätverket behöver ändå en roll på containern. Appen 
 
 ## Bildbevis och verifiering
 
+NSG regler:
+![alt text](<nsg web.png>)
 
+Storage account nätverksinställningar:
+![alt text](<storageaccount firewall.png>)
 
 # Delmoment 4, Storage
 Koppla säker lagring för portalens dokument och bilder, så att en felanmälan med bild kan sparas.
+
+## Storage Account
+Portalens dokument och bilder lagras i lagringskontot *stnordvik00aughar01* (typ StorageV2, redundans LRS) i Blob Storage. Blob passar eftersom innehållet är filer av olika slag: anmälningar som JSON och bilder som bildfiler. Kontot är låst enligt Delmoment 3 och nås bara via Entra ID.
+
+## Blob Containers
+- *anmalningar*: Innehåller anmälningar (JSON) och bilder bifogade från portalen. Åtkomstnivån är Hot och motiveras efter Nordviks specifikation: Skrivs och läses ofta, särskilt vid incidenter (300+ anmälningar per timme).
+- *dokument*: Innehåller kontrakt och besiktingsprotokoll. Åtkomstnivå är hot men flytt till cool efter 90 dagar utan ändringar. Motiveringen efter Nordviks specifikation: Läses sällan efter att de lagts upp.
 
 # Delmoment 5, IaC
 Provisionera lösningen med ARM-templates, versionshanterat i GitHub, så att den kan återskapas från repot.
