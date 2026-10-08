@@ -173,7 +173,17 @@ Kostnadsoptimering:
 
 
 # Delmoment 5, IaC
-Provisionera lösningen med ARM-templates, versionshanterat i GitHub, så att den kan återskapas från repot.
+
+## Vad som är kod
+Hela miljön provisioneras med en ARM template *main.json*, som skapar den användartilldelade identiteten, NSG, VNet och subnät, lagringskontot med containrar och livscykelregel, publik IP, nätverkskort, VM och alla rolltilldelningar. Maskinens inre konfiguration (Flask-appen och dess tjänst) beskrivs i cloud-init-nordvik.txt, som skickas med som parameter. Templaten skapar maskinen, och cloud-init konfigurerar den vid första uppstart.
+
+## Parametrar i stället för hårdkodade värden
+Allt som skiljer sig mellan miljöer eller personer är parametrar: prefix och användarnamn (som bygger lagringsnamnet), adminIp, SSH-nyckel, VM-storlek, adressrymder, antal dagar till Cool och gruppernas object-ID:n. Taggar sätts på alla resurser för kostnadsuppföljning per avdelning. Rolltilldelningarna för grupperna har ett villkor och hoppas över om ID:t saknas, så att mallen går att köra innan grupperna finns.
+
+## Konfiguration som behöver göras manuellt/förberedelse
+- Lagringskontots namn är i nuläget hårdkodat i cloud-init-filen och inte ett värde som mallen skickar in. Byter man namn måste filen ändras och kodas om.
+- FLOW_URL sätts manuellt på VM:en efter uppstart.
+- Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI, och flödet byggs i Power Automate.
 
 # Delmoment 6, Automation och integration
 Bygg ett arbetsflöde med Power Automate som integrerar Nordviks Microsoft 365: en inskickad felanmälan skapar
