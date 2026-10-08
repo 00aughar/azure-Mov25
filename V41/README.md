@@ -158,6 +158,11 @@ Portalens dokument och bilder lagras i lagringskontot *stnordvik00aughar01* (typ
 - *anmalningar*: Innehåller anmälningar (JSON) och bilder bifogade från portalen. Åtkomstnivån är Hot och motiveras efter Nordviks specifikation: Skrivs och läses ofta, särskilt vid incidenter (300+ anmälningar per timme).
 - *dokument*: Innehåller kontrakt och besiktingsprotokoll. Åtkomstnivå är hot men flytt till cool efter 90 dagar utan ändringar. Motiveringen efter Nordviks specifikation: Läses sällan efter att de lagts upp.
 
+## Kostnadsoptimering
+Nordvik uppskattar cirka 5-10 GB bilder per år och 40 GB kontrakt. Kontrakten läses sällan, så de behöver inte ligga på den dyrare Hot-nivån. Livscykelregeln dokument-till-cool flyttar blobbar i dokument till Cool-nivån när de inte ändrats på 90 dagar (parametern dokumentCoolAfterDays). Cool har lägre lagringskostnad men högre kostnad för läsning, vilket passar filer som sällan öppnas. Regeln gäller bara dokument, så anmälningar och bilder ligger kvar på Hot.
+
+
+
 # Delmoment 5, IaC
 Provisionera lösningen med ARM-templates, versionshanterat i GitHub, så att den kan återskapas från repot.
 
