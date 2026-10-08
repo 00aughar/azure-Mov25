@@ -45,8 +45,6 @@ Webformulär > Blob Container > PowerAutomate flöde > Sharepoint lista >
 
 
 # Delmoment 1, Compute
-Provisionera värdmiljön för portalen och driftsätt sidan med felanmälningsformuläret (rubrik, beskrivning,
-bild).
 
 Resursgrupp - *rg-nordvik*
 VM - *vm-nordvik-web*
@@ -79,9 +77,6 @@ JSON text blob:
 ![alt text](<JSON compute.png>)
 
 # Delmoment 2, IAM
-Konfigurera identiteter och behörigheter för Nordviks roller enligt least privilege: hyresgäst ser och skapar
-sina egna anmälningar, förvaltare hanterar dem, ekonomi har läsande insyn. Ge även portalen en hanterad
-identitet för att nå lagringen.
 
 ## Principen:
 Rollerna följer least privilege. Varje identitet får lägsta möjliga rättighet, på lägsta möjliga nivå. Alla roller är därför tilldelade på containernivå och inte på hela lagringskontot, och tilldelas grupper i stället för enskilda personer. Det gör att en ny förvaltare bara behöver läggas till i en grupp. Grupperna *grp-nordvik-forvaltare* och *grp-nordvik-ekonomi* skapades i Entra ID, och deras object-ID:n skickas in som parametrar till mallen (forvaltareGroupId, ekonomiGroupId).
@@ -127,6 +122,12 @@ Medlemmar förvaltare:
 # Delmoment 3, Nätverk och säkerhet
 Bygg ett säkert nätverk runt lösningen med defense in depth. Portalen är publikt nåbar, medan lagringen av
 anmälningar och bilder ligger skyddad.
+
+## Nätverks & säkerhetslösning
+Portalen är publikt nåbar, medan lagringen med anmälningar och bilder är skyddad. Skyddet bygger på flera lager (defense in depth), så att ett enskilt fel i ett lager inte räcker för att nå personuppgifterna. Lagren är beskrivna från nätverkets utsida och inåt.
+
+## Nätverksindelning
+
 
 # Delmoment 4, Storage
 Koppla säker lagring för portalens dokument och bilder, så att en felanmälan med bild kan sparas.
