@@ -127,10 +127,15 @@ anmälningar och bilder ligger skyddad.
 Portalen är publikt nåbar, medan lagringen med anmälningar och bilder är skyddad. Skyddet bygger på flera lager (defense in depth), så att ett enskilt fel i ett lager inte räcker för att nå personuppgifterna. Lagren är beskrivna från nätverkets utsida och inåt.
 
 ## Nätverksindelning
-Miljön ligger i det virtuella nätverket vnet-nordvik (10.40.0.0/16) med subnätet snet-web (10.40.1.0/24) där VM:en finns. Subnätet skyddas av nätverkssäkerhetsgruppen nsg-nordvik-web, som har två tillåtande regler:
+Miljön ligger i det virtuella nätverket *vnet-nordvik* (10.40.0.0/16) med subnätet *snet-web* (10.40.1.0/24) där VM:en finns. Subnätet skyddas av nätverkssäkerhetsgruppen nsg-nordvik-web, som har två tillåtande regler:
 1. allow-web: Portar: 80, 443. Trafik: Internet Syfte: formuläret ska vara publikt.
 2. allow-ssh-admin:	Port: 22. Trafik: admins lokala Ip. Syfte: administration bara från min egen IP-adress.
 
+## Lagringsbrandvägg & regler
+Storage account *stnordvik00aughar01* har defaultAction: Deny, därav släpps endast två avsändare in: subnätet snet-web (virtualNetworkRules) och administratörens IP-adress (ipRules, parametern adminIp). Alla andra nekas, även om de har giltiga uppgifter. Administratörens adress är ett medvetet undantag så att jag kan felsöka och verifiera innehållet.
+
+- allowBlobPublicAccess: false och publicAccess: None på båda containrarna gör att inget kan läsas anonymt.
+- allowSharedKeyAccess: false stänger av åtkomstnycklarna, så det finns ingen nyckel som kan läcka. All åtkomst går via Entra ID.
 
 # Delmoment 4, Storage
 Koppla säker lagring för portalens dokument och bilder, så att en felanmälan med bild kan sparas.
