@@ -161,6 +161,15 @@ Portalens dokument och bilder lagras i lagringskontot *stnordvik00aughar01* (typ
 ## Kostnadsoptimering
 Nordvik uppskattar cirka 5-10 GB bilder per år och 40 GB kontrakt. Kontrakten läses sällan, så de behöver inte ligga på den dyrare Hot-nivån. Livscykelregeln dokument-till-cool flyttar blobbar i dokument till Cool-nivån när de inte ändrats på 90 dagar (parametern dokumentCoolAfterDays). Cool har lägre lagringskostnad men högre kostnad för läsning, vilket passar filer som sällan öppnas. Regeln gäller bara dokument, så anmälningar och bilder ligger kvar på Hot.
 
+## Bildbevis:
+
+Containers:
+![alt text](<containers bevis.png>)
+
+Kostnadsoptimering:
+![alt text](kostnadsoptimering.png)
+![alt text](<90 dagar blob.png>)
+
 
 
 # Delmoment 5, IaC
