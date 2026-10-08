@@ -186,8 +186,6 @@ Allt som skiljer sig mellan miljöer eller personer är parametrar: prefix och a
 - Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI, och flödet byggs i Power Automate.
 
 # Delmoment 6, Automation och integration
-Bygg ett arbetsflöde med Power Automate som integrerar Nordviks Microsoft 365: en inskickad felanmälan skapar
-en post i en SharePoint-lista och en notis till förvaltaren i Teams eller Outlook.
 
 ## Beskrivning av PowerAutomate flödet *nordvik-felanmälan-http*
 
@@ -240,6 +238,24 @@ JSON schemat för trigger:
     }
 }
 ```
+
+## Bildbevis flöde
+![alt text](<fungerande flöde.png>)
+
+## Test flöde el - ej akut
+![alt text](<el test form.png>)
+![alt text](<el test.png>)
+![alt text](<notis inget mail el.png>)
+
+## Test flöde vattenläcka - akut
+![alt text](<test form vatten.png>)
+![alt text](<vatten test lista.png>)
+![alt text](<vatten test mail.png>)
+
+## Körning av flöde och mail till hyresgäst test
+![alt text](<fungerande flöde-1.png>)
+![alt text](<bekräftelse mail hyresgäst.png>)
+
 
 # Delmoment 7, Dokumentation
 Beskriv hur lösningen planerats, implementerats och kan återskapas.
