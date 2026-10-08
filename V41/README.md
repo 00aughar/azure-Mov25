@@ -137,6 +137,13 @@ Storage account *stnordvik00aughar01* har defaultAction: Deny, därav släpps en
 - allowBlobPublicAccess: false och publicAccess: None på båda containrarna gör att inget kan läsas anonymt.
 - allowSharedKeyAccess: false stänger av åtkomstnycklarna, så det finns ingen nyckel som kan läcka. All åtkomst går via Entra ID.
 
+## Identiteter och roller (RBAC)
+Den som tar sig förbi nätverket behöver ändå en roll på containern. Appen använder den hanterade identiteten id-nordvik-portal med rätt enbart på anmalningar, och förvaltare och ekonomi har sina roller via grupper (se Delmoment 2).
+
+## Bildbevis och verifiering
+
+
+
 # Delmoment 4, Storage
 Koppla säker lagring för portalens dokument och bilder, så att en felanmälan med bild kan sparas.
 
