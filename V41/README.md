@@ -33,8 +33,17 @@ az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
 ```
 
 Del A, Dokumentation
-Redogör för de centrala Azure-tjänster du använder inom Compute, nätverk och storage, och förklara
-virtualiseringsnivåerna VM, containers och serverless samt vilken nivå du valt för Nordviks portal och varför.
+
+Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i fallet:
+
+## Last: 
+Normalt 5-10 samtidiga användare och upp mot 120 vid topp är en liten last, som en liten VM klarar utan problem. Hyresgästerna är fler än förvaltarna, men aktiviteten kommer i korta toppar.
+## Kostnad: 
+En liten VM ryms med god marginal i ramen på cirka 2 500 kr/månad. Standard_D2s_v3 kostar $7,10 i månaden at driva.
+## Minst förändring och full kontroll: 
+Appen körs som en vanlig tjänst, och hela miljön byggs reproducerbart med ARM-template och cloud-init.
+## Kompetens och förvaltning: 
+Jag kan bygga, felsöka och återskapa miljön som kod på VM-nivå. För en liten organisation är en lösning som går att förvalta ett värde i sig.
 
 Del B, Praktisk lösning
 Planera och implementera infrastrukturen för hyresgästportalen med felanmälan:
