@@ -21,7 +21,6 @@
     "vmSize": { "value": "Standard_D2als_v6" },
     "vnetPrefix": { "value": "10.40.0.0/16" },
     "snetWebPrefix": { "value": "10.40.1.0/24" },
-    "snetDataPrefix": { "value": "10.40.2.0/24" },
     "dokumentCoolAfterDays": { "value": 90 },
     "forvaltareGroupId": { "value": "FYLL I FRAN TERMINAL: az ad group show --group grp-nordvik-forvaltare --query id -o tsv" },
     "ekonomiGroupId": { "value": "FYLL I FRAN TERMINAL: az ad group show --group grp-nordvik-ekonomi --query id -o tsv" }

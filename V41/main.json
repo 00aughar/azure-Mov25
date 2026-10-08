@@ -66,10 +66,6 @@
       "type": "string",
       "defaultValue": "10.40.1.0/24"
     },
-    "snetDataPrefix": {
-      "type": "string",
-      "defaultValue": "10.40.2.0/24"
-    },
     "dokumentCoolAfterDays": {
       "type": "int",
       "defaultValue": 90,
@@ -90,9 +86,7 @@
   "variables": {
     "vnetName": "[concat('vnet-', parameters('namePrefix'))]",
     "snetWebName": "snet-web",
-    "snetDataName": "snet-data",
     "nsgWebName": "[concat('nsg-', parameters('namePrefix'), '-web')]",
-    "nsgDataName": "[concat('nsg-', parameters('namePrefix'), '-data')]",
     "pipName": "[concat('pip-', parameters('namePrefix'), '-web')]",
     "nicName": "[concat('nic-', parameters('namePrefix'), '-web')]",
     "vmName": "[concat('vm-', parameters('namePrefix'), '-web')]",
@@ -157,54 +151,14 @@
     },
 
     {
-      "comments": "NSG for det privata datasubnatet: bara trafik fran webbsubnatet, allt fran internet nekas explicit.",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2023-05-01",
-      "name": "[variables('nsgDataName')]",
-      "location": "[parameters('location')]",
-      "tags": "[parameters('tags')]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "allow-web-to-data",
-            "properties": {
-              "priority": 100,
-              "direction": "Inbound",
-              "access": "Allow",
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "[parameters('snetWebPrefix')]",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "443"
-            }
-          },
-          {
-            "name": "deny-internet-inbound",
-            "properties": {
-              "priority": 200,
-              "direction": "Inbound",
-              "access": "Deny",
-              "protocol": "*",
-              "sourceAddressPrefix": "Internet",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*"
-            }
-          }
-        ]
-      }
-    },
-
-    {
-      "comments": "VNet med publikt webbsubnat (service endpoint mot Storage) och privat datasubnat, vart och ett med egen NSG.",
+      "comments": "VNet med ett webbsubnat (service endpoint mot Storage) och en NSG. Lagringen nas via service endpoint, sa inget separat datasubnat behovs.",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2023-05-01",
       "name": "[variables('vnetName')]",
       "location": "[parameters('location')]",
       "tags": "[parameters('tags')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgDataName'))]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]"
       ],
       "properties": {
         "addressSpace": {
@@ -221,15 +175,6 @@
               "serviceEndpoints": [
                 { "service": "Microsoft.Storage" }
               ]
-            }
-          },
-          {
-            "name": "[variables('snetDataName')]",
-            "properties": {
-              "addressPrefix": "[parameters('snetDataPrefix')]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgDataName'))]"
-              }
             }
           }
         ]

@@ -127,6 +127,9 @@ anmälningar och bilder ligger skyddad.
 Portalen är publikt nåbar, medan lagringen med anmälningar och bilder är skyddad. Skyddet bygger på flera lager (defense in depth), så att ett enskilt fel i ett lager inte räcker för att nå personuppgifterna. Lagren är beskrivna från nätverkets utsida och inåt.
 
 ## Nätverksindelning
+Miljön ligger i det virtuella nätverket vnet-nordvik (10.40.0.0/16) med subnätet snet-web (10.40.1.0/24) där VM:en finns. Subnätet skyddas av nätverkssäkerhetsgruppen nsg-nordvik-web, som har två tillåtande regler:
+1. allow-web: Portar: 80, 443. Trafik: Internet Syfte: formuläret ska vara publikt.
+2. allow-ssh-admin:	Port: 22. Trafik: admins lokala Ip. Syfte: administration bara från min egen IP-adress.
 
 
 # Delmoment 4, Storage
