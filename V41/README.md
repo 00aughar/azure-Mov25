@@ -264,6 +264,23 @@ Koden ligger i repot `azure-Mov25` på GitHub. Där finns `main.json`, `main.par
 Github historik exempel:
 ![alt text](<github historik.png>)
 
+## Driftsättning
+Varje ändring körs i tre steg:
+
+```
+az deployment group validate --resource-group rg-nordvik \
+  --template-file main.json --parameters @main.parameters.json
+
+az deployment group what-if --resource-group rg-nordvik \
+  --template-file main.json --parameters @main.parameters.json
+
+az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
+  --template-file main.json --parameters @main.parameters.json
+```
+
+`validate` kontrollerar att mallen och parametrarna är giltiga, `what-if` visar vad som kommer att skapas, ändras eller tas bort utan att göra något, och `create` genomför ändringen.
+
+
 # Delmoment 6, Automation och integration
 
 ## Beskrivning av PowerAutomate flödet *nordvik-felanmälan-http*
