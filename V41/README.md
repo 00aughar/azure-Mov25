@@ -280,6 +280,11 @@ az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
 
 `validate` kontrollerar att mallen och parametrarna är giltiga, `what-if` visar vad som kommer att skapas, ändras eller tas bort utan att göra något, och `create` genomför ändringen.
 
+## Konfiguration som behöver göras manuellt
+- Lagringskontots namn är hårdkodat i cloud-init-filen och är inte ett värde som mallen skickar in. Byter man namn måste filen ändras och kodas om.
+- `FLOW_URL` sätts manuellt på VM:en efter uppstart.
+- Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI och flödet byggs i Power Automate.
+
 
 # Delmoment 6, Automation och integration
 
