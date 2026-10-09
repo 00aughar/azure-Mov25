@@ -588,3 +588,28 @@ flowchart LR
     F -->|Contributor| B
     E[Ekonomi] -->|Reader| B
 ```
+
+## Planering
+
+| Krav | Beslut | Status |
+|---|---|---|
+| Personuppgifter, lagring ej publik | Låst lagringskonto: ingen publik åtkomst, inga nycklar, brandvägg med `defaultAction: Deny` | Uppfyllt |
+| Åtkomst per roll, least privilege | Entra-grupper och RBAC på containernivå, hanterad identitet för portalen | Uppfyllt |
+| Bilder cirka 5-10 GB per år (Hot), kontrakt 40 GB (sällan lästa) | Två containrar, livscykelregel som flyttar `dokument` till Cool efter 90 dagar | Uppfyllt |
+| Akuta kategorier ger direktmejl | `urgent`-flagga i appen och villkor i flödet | Uppfyllt |
+| Hyresgäst ser sina egna anmälningar | Ej byggt, kräver inloggning. Hyresgästen får en bekräftelse via mail | Delvis |
+| 99,5 % tillgänglighet och tåla att en instans faller | Enskild VM, ej uppfyllt. Se Del A | Ej uppfyllt |
+| Cirka 2 500 kr per månad, ingen betalning för oanvänd kapacitet på natten | Ryms i ramen men VM kostar dygnet runt. Se Del A | Delvis |
+
+Valet av nivå (VM) och dess begränsningar motiveras i Del A.
+
+## Implementering
+
+1. **Resursgrupp och grupper:** resursgruppen `rg-nordvik` skapades med taggar, och grupperna `grp-nordvik-forvaltare` och `grp-nordvik-ekonomi` skapades i Entra ID.
+2. **Infrastruktur:** ARM-mallen driftsattes med `validate`, `what-if` och `create` (Delmoment 5). Den skapar identitet, nätverk, lagring, VM och rolltilldelningar.
+3. **Applikation:** cloud-init installerade och startade Flask-appen som tjänsten `felanmalan.service` (Delmoment 1).
+4. **Behörigheter:** rolltilldelningarna verifierades med Check access och med test av användare i grupperna (Delmoment 2).
+5. **Nätverk och lagring:** NSG, service endpoint och lagringsbrandvägg verifierades i portalen (Delmoment 3 och 4).
+6. **Integration:** Power Automate-flödet byggdes mot SharePoint-listan och Teams-kanalen. `FLOW_URL` sattes manuellt på VM:en (Delmoment 6).
+7. **Test:** anmälningar med och utan bild, akut och icke-akut.
+8. **Återskapande:** hela miljön byggdes upp igen från repot i en separat resursgrupp (Delmoment 5).
