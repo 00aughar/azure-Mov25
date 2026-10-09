@@ -36,14 +36,78 @@ Del A, Dokumentation
 
 Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i fallet:
 
-## Last: 
-Normalt 5-10 samtidiga användare och upp mot 120 vid topp är en liten last, som en liten VM klarar utan problem. Hyresgästerna är fler än förvaltarna, men aktiviteten kommer i korta toppar.
-## Kostnad: 
-En liten VM ryms med god marginal i ramen på cirka 2 500 kr/månad. Standard_D2s_v3 kostar $7,10 i månaden at driva.
-## Minst förändring och full kontroll: 
-Appen körs som en vanlig tjänst, och hela miljön byggs reproducerbart med ARM-template och cloud-init.
-## Kompetens och förvaltning: 
+# Del A, Dokumentation
+
+## 1. Centrala Azure-tjänster
+
+| Område | Tjänst | Resurs i lösningen | Syfte |
+|---|---|---|---|
+| Compute | Virtuell maskin (IaaS) | `vm-nordvik-web` (Standard D2als v2, Ubuntu 24.04) | Kör formuläret och Flask-appen |
+| Compute | Hanterad identitet | `id-nordvik-portal` | Ger appen åtkomst till lagringen utan nycklar |
+| Nätverk | Virtuellt nätverk och subnät | `vnet-nordvik`, `snet-web` | Isolerat nätverk för VM:en |
+| Nätverk | Nätverkssäkerhetsgrupp (NSG) | `nsg-nordvik-web` | Styr vilka portar och källor som når VM:en |
+| Nätverk | Publik IP | `pip-nordvik-web` | Gör formuläret nåbart för hyresgäster |
+| Storage | Blob Storage | `stnordvik00aughar01` med containrarna `anmalningar` och `dokument` | Lagrar anmälningar, bilder, kontrakt och protokoll |
+
+Till detta kommer Entra ID för grupper och roller (RBAC) och ARM-mallar för att provisionera allt som kod. SharePoint, Teams, Outlook och Power Automate är SaaS-tjänster i Nordviks Microsoft 365 som Microsoft driftar helt. De ingår i helheten men inte i valet av virtualiseringsnivå.
+
+## 2. Virtualiseringsnivåerna
+
+| | Virtuell maskin | Container | Serverless |
+|---|---|---|---|
+| Azure-exempel | Virtual Machines | Container Instances, Container Apps | Azure Functions |
+| Jag ansvarar för | Operativsystem, uppdateringar, runtime och app | Containerbild och app | Koden |
+| Azure ansvarar för | Hårdvara och hypervisor | Värd och orkestrering | Allt under koden |
+| Skalning | Manuell eller via skalningsgrupp | Snabb, kan skalas ut automatiskt | Automatisk per anrop, kan skalas till noll |
+| Kostnadsmodell | Betalar så länge maskinen är allokerad | Betalar för körtid och resurser | Betalar per körning |
+| Passar | Befintliga appar, full kontroll | Portabla, paketerade appar | Korta, händelsestyrda uppgifter |
+
+
+## 3. Vald nivå för portalen: virtuell maskin
+
+Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i fallet och på mina förutsättningar.
+
+### Last
+Nordvik har 5 500 hyresgäster och cirka 1 800 inloggningar per dag, med toppar kl. 07-09 och 17-20 och ingen trafik kl. 00-06. Normalt är det 5-10 samtidiga användare och upp mot 120 vid topp, och vid en incident kan det komma över 300 anmälningar per timme. Det är en liten last som en liten VM klarar utan problem.
+
+### Kostnad
+En liten VM ryms med god marginal i ramen på cirka 2 500 kr per månad. I VM storleken Standard D2als v2 kostar $7,10 i månaden.
+
+### Minst förändring och full kontroll
+Appen körs som en vanlig tjänst och hela miljön byggs reproducerbart med ARM-mall och cloud-init. Jag behövde inte skriva om eller paketera om något.
+
+### Kompetens och förvaltning
 Jag kan bygga, felsöka och återskapa miljön som kod på VM-nivå. För en liten organisation är en lösning som går att förvalta ett värde i sig.
+
+### Varför inte container eller serverless
+Container och serverless hade flyttat driftansvaret till Azure och kunnat skalas ned till noll på natten. Men de hade krävt att appen paketerades om eller skrevs om till funktioner. Eftersom lasten är liten och jag ville behålla appen oförändrad valde jag VM-nivån.
+
+## 4. Vad som inte uppnås med lösningen
+
+- **Tillgänglighet (99,5 % under kontorstid och att tåla att en instans faller).** Portalen körs på en enda VM, som är en enda felpunkt. Om maskinen eller dess disk faller är portalen nere.
+- **Ingen betalning för oanvänd kapacitet på natten.** En allokerad VM kostar dygnet runt, även mellan 00 och 06 när trafiken är noll.
+
+## 5. Produktionsvariant: serverless
+
+Den nivå som passar Nordviks krav bäst är serverless, till exempel Azure Functions med HTTP-triggers.
+
+| Krav | VM (min implementation) | Serverless |
+|---|---|---|
+| Tåla att en instans faller | Nej | Ja, plattformen hanterar instanserna |
+| Ingen betalning för oanvänd kapacitet | Nej | Ja, skalar till noll och faktureras per körning |
+| Tillgänglighet | Enskild VM | Egen SLA för tjänsten
+
+Lasten passar också: aktiviteten kommer i korta toppar och är noll på natten, vilket är det scenario där serverless betalar sig.
+
+**Vad som skulle ändras:**
+- Flask-appen skrivs om till funktioner. Formuläret kan återanvändas, men hanteringen av bilduppladdning måste anpassas.
+- Mallen byts mot Function App, plan och ett subnät för VNet-integration. 
+
+## 6. Slutsats
+
+För Nordvik rekommenderar jag serverless i produktion. Jag valde VM för den här implementationen för att behålla appen oförändrad, visa hela miljön som kod och hålla nere risken, och jag redovisar ovan vad det kostar i krav som inte är uppfyllda.
+
+
 
 Del B, Praktisk lösning
 Planera och implementera infrastrukturen för hyresgästportalen med felanmälan:
