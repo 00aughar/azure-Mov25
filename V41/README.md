@@ -286,6 +286,7 @@ az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
 - Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI och flödet byggs i Power Automate.
 
 
+
 # Delmoment 6, Automation och integration
 
 ## Beskrivning av PowerAutomate flödet *nordvik-felanmälan-http*
@@ -569,3 +570,21 @@ Flödet i JSON format:
 
 # Delmoment 7, Dokumentation
 Beskriv hur lösningen planerats, implementerats och kan återskapas.
+
+## Översikt och arkitektur
+
+Hyresgästen fyller i formuläret som körs på en VM i Azure. Appen sparar anmälan och eventuell bild i en skyddad blob-container och anropar samtidigt ett Power Automate-flöde, som skapar en post i SharePoint, notifierar förvaltarna i Teams, skickar ett direktmejl vid akuta ärenden och bekräftar mottagandet till hyresgästen.
+
+```mermaid
+flowchart LR
+    H[Hyresgäst] -->|HTTP| VM["VM vm-nordvik-web<br/>formulär + Flask-app"]
+    VM -->|"hanterad identitet<br/>"| B[("Blob Storage<br/>anmalningar / dokument")]
+    VM -->|HTTP-anrop| PA[Power Automate]
+    PA --> SP[SharePoint-lista]
+    PA --> T[Teams notis: kanalen Förvaltare]
+    PA -->|akut| M[Direktmejl förvaltare]
+    PA --> K[Bekräftelse till hyresgäst]
+    F[Förvaltare] --> SP
+    F -->|Contributor| B
+    E[Ekonomi] -->|Reader| B
+```
