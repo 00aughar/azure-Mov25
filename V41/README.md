@@ -124,7 +124,7 @@ VM - *vm-nordvik-web*
 
 
 ## Tjänsten och nivå val: 
-Jag valde att bygga portalen på en virtuell maskin i Azure portalen *vm-nordvik-web*, Storlek *Standard D2als v6 (2 vcpus, 4 GiB memory)* med Operativsystemet *ubuntu-24_04-lts*. VMen är en IaaS tjänst, Azure sköter den fysiska hårdvaran medans jag sköter ansvar för operativsystemet, uppdateringar och applikationer. Jag valde VM lösningen för att lasten är låg med cirka 5-10 samtida användare med en topp vid 120. Hela miljön byggs upp med kod (IaC). Begränsningarna med denna lösning tas upp i del A.
+Jag valde att bygga portalen på en virtuell maskin i Azure portalen *vm-nordvik-web*, Storlek *Standard D2als v2 (2 vcpus, 4 GiB memory)* med Operativsystemet *ubuntu-24_04-lts*. VMen är en IaaS tjänst, Azure sköter den fysiska hårdvaran medans jag sköter ansvar för operativsystemet, uppdateringar och applikationer. Jag valde VM lösningen för att lasten är låg med cirka 5-10 samtida användare med en topp vid 120. Hela miljön byggs upp med kod (IaC). Begränsningarna med denna lösning tas upp i del A.
 
 ## Konfigurationen:
  Maskinen konfigureras upp automatiskt med cloud-init filen *cloud-init-nordvik.txt* som skickas med i ARM-mallen *main.json* och tillhörande parameterfil *main.parameters.json*. Cloud-init filen konfigurerar Python bibliotken (flask, azure-identity och azure-storage-blob), lägger ut applikationen och registrerar den som tjänsten *felanmalan.service*. En ny VM blir därav identiskt konfigurerad om den behöver byggas upp igen, förutom det manuella steget för flödets address som näms nedan.
@@ -243,8 +243,6 @@ Kostnadsoptimering:
 ![alt text](kostnadsoptimering.png)
 ![alt text](<90 dagar blob.png>)
 
-
-
 # Delmoment 5, IaC
 
 ## Vad som är kod
@@ -257,6 +255,14 @@ Allt som skiljer sig mellan miljöer eller personer är parametrar: prefix och a
 - Lagringskontots namn är i nuläget hårdkodat i cloud-init-filen och inte ett värde som mallen skickar in. Byter man namn måste filen ändras och kodas om.
 - FLOW_URL sätts manuellt på VM:en efter uppstart.
 - Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI, och flödet byggs i Power Automate.
+
+## Versionshantering i GitHub
+Koden ligger i repot `azure-Mov25` på GitHub. Där finns `main.json`, `main.parameters.example.json` och `cloud-init-nordvik.txt`.
+
+- Commit-historiken visar hur designen har förändrats. Till exempel togs ett oanvänt datasubnät och dess NSG bort efter granskning, eftersom ingenting låg i subnätet.
+
+Github historik exempel:
+![alt text](<github historik.png>)
 
 # Delmoment 6, Automation och integration
 
