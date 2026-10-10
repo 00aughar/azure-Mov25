@@ -4,37 +4,9 @@
 
 **August Hartwig** 
 **MOV25** 
-**x/x**
+**10/10**
 
-Skapa resursgruppen
-```
-az group create --name rg-nordvik --location swedencentral
-```
-
-Skapa grupper förvaltare & ekonomi
-```
-az ad group create --display-name grp-nordvik-forvaltare --mail-nickname grp-nordvik-forvaltare
-az ad group create --display-name grp-nordvik-ekonomi --mail-nickname grp-nordvik-ekonomi
-```
-
-Deploya
-```
-az group create --name rg-nordvik --location swedencentral \
-  --tags foretag=nordvik projekt=hyresgastportal avdelning=forvaltning miljo=test
-
-az deployment group validate --resource-group rg-nordvik \
-  --template-file main.json --parameters @main.parameters.json
-
-az deployment group what-if --resource-group rg-nordvik \
-  --template-file main.json --parameters @main.parameters.json
-
-az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
-  --template-file main.json --parameters @main.parameters.json
-```
-
-Del A, Dokumentation
-
-Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i fallet:
+Jag har implementerat portalen på en virtuell maskin vilket skiljer något mot kravsättningen. Jag har däremot förklarat hur en produktionslösning hade sett ut i Del A av dokumentationen. 
 
 # Del A, Dokumentation
 
@@ -42,7 +14,7 @@ Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i
 
 | Område | Tjänst | Resurs i lösningen | Syfte |
 |---|---|---|---|
-| Compute | Virtuell maskin (IaaS) | `vm-nordvik-web` (Standard D2als v2, Ubuntu 24.04) | Kör formuläret och Flask-appen |
+| Compute | Virtuell maskin (IaaS) | `vm-nordvik-web` (Standard_B2ats_v2, Ubuntu 24.04) | Kör formuläret och Flask-appen |
 | Compute | Hanterad identitet | `id-nordvik-portal` | Ger appen åtkomst till lagringen utan nycklar |
 | Nätverk | Virtuellt nätverk och subnät | `vnet-nordvik`, `snet-web` | Isolerat nätverk för VM:en |
 | Nätverk | Nätverkssäkerhetsgrupp (NSG) | `nsg-nordvik-web` | Styr vilka portar och källor som når VM:en |
@@ -62,16 +34,15 @@ Till detta kommer Entra ID för grupper och roller (RBAC) och ARM-mallar för at
 | Kostnadsmodell | Betalar så länge maskinen är allokerad | Betalar för körtid och resurser | Betalar per körning |
 | Passar | Befintliga appar, full kontroll | Portabla, paketerade appar | Korta, händelsestyrda uppgifter |
 
-
 ## 3. Vald nivå för portalen: virtuell maskin
 
-Jag har implementerat portalen på en virtuell maskin. Valet bygger på kraven i fallet och på mina förutsättningar.
+Jag har implementerat portalen på en virtuell maskin. Denna lösning följer de flesta av kraven som Nordvik hade.
 
 ### Last
 Nordvik har 5 500 hyresgäster och cirka 1 800 inloggningar per dag, med toppar kl. 07-09 och 17-20 och ingen trafik kl. 00-06. Normalt är det 5-10 samtidiga användare och upp mot 120 vid topp, och vid en incident kan det komma över 300 anmälningar per timme. Det är en liten last som en liten VM klarar utan problem.
 
 ### Kostnad
-En liten VM ryms med god marginal i ramen på cirka 2 500 kr per månad. I VM storleken Standard D2als v2 kostar $7,10 i månaden.
+En liten VM ryms med god marginal i ramen på cirka 2 500 kr per månad. I VM storleken Standard_B2ats_v2 kostar $7,10 i månaden.
 
 ### Minst förändring och full kontroll
 Appen körs som en vanlig tjänst och hela miljön byggs reproducerbart med ARM-mall och cloud-init. Jag behövde inte skriva om eller paketera om något.
@@ -94,7 +65,7 @@ Den nivå som passar Nordviks krav bäst är serverless, till exempel Azure Func
 | Krav | VM (min implementation) | Serverless |
 |---|---|---|
 | Tåla att en instans faller | Nej | Ja, plattformen hanterar instanserna |
-| Ingen betalning för oanvänd kapacitet | Nej | Ja, skalar till noll och faktureras per körning |
+| Kostnaden följer användningen | Nej | Ja, skalar till noll och faktureras per körning |
 | Tillgänglighet | Enskild VM | Egen SLA för tjänsten
 
 Lasten passar också: aktiviteten kommer i korta toppar och är noll på natten, vilket är det scenario där serverless betalar sig.
@@ -105,32 +76,21 @@ Lasten passar också: aktiviteten kommer i korta toppar och är noll på natten,
 
 ## 6. Slutsats
 
-För Nordvik rekommenderar jag serverless i produktion. Jag valde VM för den här implementationen för att behålla appen oförändrad, visa hela miljön som kod och hålla nere risken, och jag redovisar ovan vad det kostar i krav som inte är uppfyllda.
-
-
+För Nordviks riktiga produktionsmiljö rekommenderar jag en serverless lösning. Jag valde VM för den här implementationen för att behålla appen oförändrad, visa hela miljön som kod och hålla nere risken, och jag redovisar ovan vad det kostar i krav som inte är uppfyllda.
 
 Del B, Praktisk lösning
 Planera och implementera infrastrukturen för hyresgästportalen med felanmälan:
 
-Översikt
-
-Webformulär > Blob Container > PowerAutomate flöde > Sharepoint lista > 
-
-
 # Delmoment 1, Compute
 
-Resursgrupp - *rg-nordvik*
-VM - *vm-nordvik-web*
-
-
 ## Tjänsten och nivå val: 
-Jag valde att bygga portalen på en virtuell maskin i Azure portalen *vm-nordvik-web*, Storlek *Standard D2als v2 (2 vcpus, 4 GiB memory)* med Operativsystemet *ubuntu-24_04-lts*. VMen är en IaaS tjänst, Azure sköter den fysiska hårdvaran medans jag sköter ansvar för operativsystemet, uppdateringar och applikationer. Jag valde VM lösningen för att lasten är låg med cirka 5-10 samtida användare med en topp vid 120. Hela miljön byggs upp med kod (IaC). Begränsningarna med denna lösning tas upp i del A.
+Jag valde att bygga portalen på en virtuell maskin i Azure portalen *vm-nordvik-web*, Storlek *Standard_B2ats_v2* med Operativsystemet *ubuntu-24_04-lts*. VMen är en IaaS tjänst, Azure sköter den fysiska hårdvaran medans jag ansvarar för operativsystemet, uppdateringar och applikationer. Jag valde VM lösningen för att lasten är låg med cirka 5-10 samtida användare med en topp vid 120. Hela miljön byggs upp med kod (IaC). Begränsningarna med denna lösning tas upp i del A.
 
 ## Konfigurationen:
- Maskinen konfigureras upp automatiskt med cloud-init filen *cloud-init-nordvik.txt* som skickas med i ARM-mallen *main.json* och tillhörande parameterfil *main.parameters.json*. Cloud-init filen konfigurerar Python bibliotken (flask, azure-identity och azure-storage-blob), lägger ut applikationen och registrerar den som tjänsten *felanmalan.service*. En ny VM blir därav identiskt konfigurerad om den behöver byggas upp igen, förutom det manuella steget för flödets address som näms nedan.
+ Maskinen konfigureras upp automatiskt med cloud-init filen *cloud-init-nordvik.txt* som skickas med i ARM-mallen *main.json* och tillhörande parameterfil *main.parameters.json*. Cloud-init filen konfigurerar Python biblioteken (flask, azure-identity och azure-storage-blob), lägger ut applikationen och registrerar den som tjänsten *felanmalan.service*. En ny VM blir därav identiskt konfigurerad om den behöver byggas upp igen, förutom det manuella steget för flödets address som nämns nedan.
 
 ## Applikationen:
- Formuläret som innehåller fält för: rubrik, kategori, fastighet, beskrivning, bild, namn & e-post som sedan tas emot av flask-appen i bakrunden. När anmälan skickas sparar appen innehållet i en JSON-fil *arende-<id>.json* i blob container *anmalningar*, bifogade bilder sparas som en egen blob i containern. Appen anropar flödet för varje anmälan. Akuta kategorier (värme, vatten och lås) markeras med *urgent*, vilket flödet använder för att skicka ett direktmejl.
+ Formuläret som innehåller fält för: rubrik, kategori, fastighet, beskrivning, bild, namn & e-post som sedan tas emot av flask-appen i bakgrunden. När anmälan skickas sparar appen innehållet i en JSON-fil *arende-<id>.json* i blob container *anmalningar*, bifogade bilder sparas som en egen blob i containern. Appen anropar flödet för varje anmälan. Akuta kategorier (värme, vatten och lås) markeras med *urgent*, vilket flödet använder för att skicka ett direktmejl.
 
 ## Åtkomst till lagringen:
 Applikationen använder den användartilldelade hanterade identiteten *id-nordvik-portal*, som har rollen *Storage Blob Data Contributor* på containern *anmalningar*. Därför finns inga nycklar eller lösenord i koden eller i repot. Flödets adress (FLOW_URL) är en hemlighet och lämnas tom i repot. Den sätts manuellt på VM:en efter uppstart.
@@ -205,7 +165,7 @@ Miljön ligger i det virtuella nätverket *vnet-nordvik* (10.40.0.0/16) med subn
 2. allow-ssh-admin:	Port: 22. Trafik: admins lokala Ip. Syfte: administration bara från min egen IP-adress.
 
 ## Lagringsbrandvägg & regler
-Storage account *stnordvik00aughar01* har defaultAction: Deny, därav släpps endast två avsändare in: subnätet snet-web (virtualNetworkRules) och administratörens IP-adress (ipRules, parametern adminIp). Alla andra nekas, även om de har giltiga uppgifter. Administratörens adress är ett medvetet undantag så att jag kan felsöka och verifiera innehållet.
+Storage account *stnordvik00aughar01* har defaultAction: Deny, därför släpps endast två avsändare in: subnätet snet-web (virtualNetworkRules) och administratörens IP-adress (ipRules, parametern adminIp). Alla andra nekas, även om de har giltiga uppgifter. Administratörens adress är ett medvetet undantag så att jag kan felsöka och verifiera innehållet.
 
 - allowBlobPublicAccess: false och publicAccess: None på båda containrarna gör att inget kan läsas anonymt.
 - allowSharedKeyAccess: false stänger av åtkomstnycklarna, så det finns ingen nyckel som kan läcka. All åtkomst går via Entra ID.
@@ -229,7 +189,7 @@ Portalens dokument och bilder lagras i lagringskontot *stnordvik00aughar01* (typ
 
 ## Blob Containers
 - *anmalningar*: Innehåller anmälningar (JSON) och bilder bifogade från portalen. Åtkomstnivån är Hot och motiveras efter Nordviks specifikation: Skrivs och läses ofta, särskilt vid incidenter (300+ anmälningar per timme).
-- *dokument*: Innehåller kontrakt och besiktingsprotokoll. Åtkomstnivå är hot men flytt till cool efter 90 dagar utan ändringar. Motiveringen efter Nordviks specifikation: Läses sällan efter att de lagts upp.
+- *dokument*: Innehåller kontrakt och besiktningsprotokoll. Åtkomstnivå är hot men flytt till cool efter 90 dagar utan ändringar. Motiveringen efter Nordviks specifikation: Läses sällan efter att de lagts upp.
 
 ## Kostnadsoptimering
 Nordvik uppskattar cirka 5-10 GB bilder per år och 40 GB kontrakt. Kontrakten läses sällan, så de behöver inte ligga på den dyrare Hot-nivån. Livscykelregeln dokument-till-cool flyttar blobbar i dokument till Cool-nivån när de inte ändrats på 90 dagar (parametern dokumentCoolAfterDays). Cool har lägre lagringskostnad men högre kostnad för läsning, vilket passar filer som sällan öppnas. Regeln gäller bara dokument, så anmälningar och bilder ligger kvar på Hot.
@@ -259,7 +219,7 @@ Allt som skiljer sig mellan miljöer eller personer är parametrar: prefix och a
 ## Versionshantering i GitHub
 Koden ligger i repot `azure-Mov25` på GitHub. Där finns `main.json`, `main.parameters.example.json` och `cloud-init-nordvik.txt`.
 
-- Commit-historiken visar hur designen har förändrats. Till exempel togs ett oanvänt datasubnät och dess NSG bort efter granskning, eftersom ingenting låg i subnätet.
+- Commit-historiken visar hur designen har förändrats. Till exempel togs ett oanvänt subnät och dess NSG bort efter genomgång av koden, eftersom ingenting låg i subnätet.
 
 Github historik exempel:
 ![alt text](<github historik.png>)
@@ -285,7 +245,534 @@ az deployment group create --resource-group rg-nordvik --name nordvik-v1 \
 - `FLOW_URL` sätts manuellt på VM:en efter uppstart.
 - Grupperna och Power Automate-flödet ligger utanför mallen. Grupperna skapas med CLI och flödet byggs i Power Automate.
 
+## Återskapande test
 
+```
+az deployment group validate -g rg-nordvik-test --template-file main.json \
+  --parameters @main.parameters.json cloudInitWebServer="$(base64 -w 0 cloud-init-test.txt)"
+
+az deployment group what-if -g rg-nordvik-test --template-file main.json \
+  --parameters @main.parameters.json cloudInitWebServer="$(base64 -w 0 cloud-init-test.txt)"
+
+time az deployment group create -g rg-nordvik-test --name nordvik-test --template-file main.json \
+  --parameters @main.parameters.json cloudInitWebServer="$(base64 -w 0 cloud-init-nordvik.txt)"
+```
+
+![alt text](<test driftsättning-1.png>)
+
+![alt text](<testkörning IAC.png>)
+
+## ARM templaten *main.json*
+
+```
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Nordvik Fastigheter AB - hyresgastportal (felanmalan). Provisionerar nätverk, lagring, identitet, roller och en värd (VM) för portalen."
+  },
+
+  "parameters": {
+    "namePrefix": {
+      "type": "string",
+      "defaultValue": "nordvik",
+      "metadata": { "description": "Foretagsnamn i resursnamnen (typ-foretag-syfte). Bara gemener och siffror." }
+    },
+    "userName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 10,
+      "metadata": { "description": "Ditt anvandarnamn (gemener/siffror), anvands i storage-namnet: st + foretag + anvandarnamn + lopnummer." }
+    },
+    "storageSuffix": {
+      "type": "string",
+      "defaultValue": "01",
+      "metadata": { "description": "Lopnummer i storage-namnet." }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": { "description": "Region for resurserna." }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "foretag": "nordvik",
+        "projekt": "hyresgastportal",
+        "avdelning": "forvaltning",
+        "miljo": "test"
+      },
+      "metadata": { "description": "Taggar som satts pa alla resurser (kostnadsuppfoljning per avdelning)." }
+    },
+    "adminIp": {
+      "type": "string",
+      "metadata": { "description": "Din publika IP (utan /32), t.ex. fran curl ifconfig.me. Far SSH till VM och atkomst till lagringen." }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser"
+    },
+    "sshPublicKey": {
+      "type": "string",
+      "metadata": { "description": "Din publika SSH-nyckel (innehallet i .pub-filen)." }
+    },
+    "cloudInitWebServer": {
+      "type": "string",
+      "metadata": { "description": "Base64-kodad cloud-init som bygger upp portalen." }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2als_v6",
+      "metadata": { "description": "VM-storlek. Kontrollera kvot med: az vm list-usage --location swedencentral" }
+    },
+    "vnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.40.0.0/16"
+    },
+    "snetWebPrefix": {
+      "type": "string",
+      "defaultValue": "10.40.1.0/24"
+    },
+    "dokumentCoolAfterDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "metadata": { "description": "Antal dagar efter senaste andring tills kontrakt/protokoll flyttas till Cool-niva." }
+    },
+    "forvaltareGroupId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": { "description": "Object-ID for Entra-gruppen med forvaltare. Lamna tomt for att hoppa over rolltilldelningen." }
+    },
+    "ekonomiGroupId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": { "description": "Object-ID for Entra-gruppen med ekonomi. Lamna tomt for att hoppa over rolltilldelningen." }
+    }
+  },
+
+  "variables": {
+    "vnetName": "[concat('vnet-', parameters('namePrefix'))]",
+    "snetWebName": "snet-web",
+    "nsgWebName": "[concat('nsg-', parameters('namePrefix'), '-web')]",
+    "pipName": "[concat('pip-', parameters('namePrefix'), '-web')]",
+    "nicName": "[concat('nic-', parameters('namePrefix'), '-web')]",
+    "vmName": "[concat('vm-', parameters('namePrefix'), '-web')]",
+    "identityName": "[concat('id-', parameters('namePrefix'), '-portal')]",
+    "storageName": "[toLower(replace(concat('st', parameters('namePrefix'), parameters('userName'), parameters('storageSuffix')), '-', ''))]",
+    "containerAnmalningar": "anmalningar",
+    "containerDokument": "dokument",
+    "scopeAnmalningar": "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'), '/blobServices/default/containers/', variables('containerAnmalningar'))]",
+    "scopeDokument": "[concat('Microsoft.Storage/storageAccounts/', variables('storageName'), '/blobServices/default/containers/', variables('containerDokument'))]",
+    "blobContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+    "blobReaderRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1')]"
+  },
+
+  "resources": [
+
+    {
+      "comments": "Anvandartilldelad identitet for portalen. Egen resurs sa att den overlever om VM:en byggs om (inget RoleAssignmentUpdateNotPermitted).",
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('identityName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]"
+    },
+
+    {
+      "comments": "NSG for det publika webbsubnatet: HTTP/HTTPS fran internet, SSH bara fran admin-IP.",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('nsgWebName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-web",
+            "properties": {
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "Internet",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRanges": ["80", "443"]
+            }
+          },
+          {
+            "name": "allow-ssh-admin",
+            "properties": {
+              "priority": 110,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "[parameters('adminIp')]",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "comments": "VNet med ett webbsubnat (service endpoint mot Storage) och en NSG. Lagringen nas via service endpoint, sa inget separat datasubnat behovs.",
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('vnetName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": ["[parameters('vnetPrefix')]"]
+        },
+        "subnets": [
+          {
+            "name": "[variables('snetWebName')]",
+            "properties": {
+              "addressPrefix": "[parameters('snetWebPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgWebName'))]"
+              },
+              "serviceEndpoints": [
+                { "service": "Microsoft.Storage" }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "comments": "Storage account. Ingen publik atkomst, ingen kontonyckel, standardatkomst nekad. Bara webbsubnatet och admin-IP slapps in.",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('storageName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": { "name": "Standard_LRS" },
+      "kind": "StorageV2",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+      ],
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "defaultToOAuthAuthentication": true,
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('snetWebName'))]",
+              "action": "Allow"
+            }
+          ],
+          "ipRules": [
+            {
+              "value": "[parameters('adminIp')]",
+              "action": "Allow"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "comments": "Container for felanmalningar och bilder (Hot, anvands ofta).",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('storageName'), '/default/', variables('containerAnmalningar'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+
+    {
+      "comments": "Container for kontrakt och besiktningsprotokoll (laseas sallan efter tre manader).",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('storageName'), '/default/', variables('containerDokument'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+
+    {
+      "comments": "Livscykelregel: kontrakt/protokoll flyttas till Cool efter ett antal dagar (kostnadsoptimering).",
+      "type": "Microsoft.Storage/storageAccounts/managementPolicies",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('storageName'), '/default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+      ],
+      "properties": {
+        "policy": {
+          "rules": [
+            {
+              "enabled": true,
+              "name": "dokument-till-cool",
+              "type": "Lifecycle",
+              "definition": {
+                "actions": {
+                  "baseBlob": {
+                    "tierToCool": {
+                      "daysAfterModificationGreaterThan": "[parameters('dokumentCoolAfterDays')]"
+                    }
+                  }
+                },
+                "filters": {
+                  "blobTypes": ["blockBlob"],
+                  "prefixMatch": ["[concat(variables('containerDokument'), '/')]"]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('pipName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": { "name": "Standard" },
+      "properties": { "publicIPAllocationMethod": "Static" }
+    },
+
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-05-01",
+      "name": "[variables('nicName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('snetWebName'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "comments": "Vard for portalen. Anvander den anvandartilldelade identiteten for att na lagringen.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('vmName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": { "vmSize": "[parameters('vmSize')]" },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "customData": "[parameters('cloudInitWebServer')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('sshPublicKey')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "ubuntu-24_04-lts",
+            "sku": "server",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            { "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]" }
+          ]
+        }
+      }
+    },
+
+    {
+      "comments": "Portalens identitet far skriva i anmalningscontainern (least privilege: bara den containern).",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[variables('scopeAnmalningar')]",
+      "name": "[guid(variables('scopeAnmalningar'), variables('identityName'), 'contributor')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', variables('containerAnmalningar'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobContributorRoleId')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+
+    {
+      "comments": "Forvaltare hanterar anmalningar (skriv/lasa).",
+      "condition": "[not(empty(parameters('forvaltareGroupId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[variables('scopeAnmalningar')]",
+      "name": "[guid(variables('scopeAnmalningar'), parameters('forvaltareGroupId'), 'contributor')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', variables('containerAnmalningar'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobContributorRoleId')]",
+        "principalId": "[parameters('forvaltareGroupId')]",
+        "principalType": "Group"
+      }
+    },
+
+    {
+      "comments": "Forvaltare hanterar kontrakt och protokoll.",
+      "condition": "[not(empty(parameters('forvaltareGroupId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[variables('scopeDokument')]",
+      "name": "[guid(variables('scopeDokument'), parameters('forvaltareGroupId'), 'contributor')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', variables('containerDokument'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobContributorRoleId')]",
+        "principalId": "[parameters('forvaltareGroupId')]",
+        "principalType": "Group"
+      }
+    },
+
+    {
+      "comments": "Ekonomi har lasande insyn i anmalningar.",
+      "condition": "[not(empty(parameters('ekonomiGroupId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[variables('scopeAnmalningar')]",
+      "name": "[guid(variables('scopeAnmalningar'), parameters('ekonomiGroupId'), 'reader')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', variables('containerAnmalningar'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobReaderRoleId')]",
+        "principalId": "[parameters('ekonomiGroupId')]",
+        "principalType": "Group"
+      }
+    },
+
+    {
+      "comments": "Ekonomi har lasande insyn i kontrakt och protokoll.",
+      "condition": "[not(empty(parameters('ekonomiGroupId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[variables('scopeDokument')]",
+      "name": "[guid(variables('scopeDokument'), parameters('ekonomiGroupId'), 'reader')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', variables('containerDokument'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('blobReaderRoleId')]",
+        "principalId": "[parameters('ekonomiGroupId')]",
+        "principalType": "Group"
+      }
+    }
+  ],
+
+  "outputs": {
+    "webserverPublikIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
+    },
+    "storageAccountNamn": {
+      "type": "string",
+      "value": "[variables('storageName')]"
+    },
+    "portalIdentityClientId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')), '2023-01-31').clientId]"
+    }
+  }
+}
+```
+
+## Parameterfilen till ARM templaten *main.parameters.json*
+
+```
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": { "value": "nordvik" },
+    "userName": { "value": "FYLL I DITT ANVANDARNAMN (gemener/siffror, 3-10 tecken)" },
+    "storageSuffix": { "value": "01" },
+    "location": { "value": "swedencentral" },
+    "tags": {
+      "value": {
+        "foretag": "nordvik",
+        "projekt": "hyresgastportal",
+        "avdelning": "forvaltning",
+        "miljo": "test"
+      }
+    },
+    "adminIp": { "value": "FYLL I FRAN TERMINAL: curl ifconfig.me" },
+    "adminUsername": { "value": "azureuser" },
+    "sshPublicKey": { "value": "FYLL I FRAN TERMINAL: ssh-keygen -y -f ~/din-nyckel" },
+    "cloudInitWebServer": { "value": "FYLL I FRAN TERMINAL: base64 -w 0 cloud-init-nordvik.txt" },
+    "vmSize": { "value": "Standard_B2ats_v2" },
+    "vnetPrefix": { "value": "10.40.0.0/16" },
+    "snetWebPrefix": { "value": "10.40.1.0/24" },
+    "dokumentCoolAfterDays": { "value": 90 },
+    "forvaltareGroupId": { "value": "FYLL I FRAN TERMINAL: az ad group show --group grp-nordvik-forvaltare --query id -o tsv" },
+    "ekonomiGroupId": { "value": "FYLL I FRAN TERMINAL: az ad group show --group grp-nordvik-ekonomi --query id -o tsv" }
+  }
+}
+```
 
 # Delmoment 6, Automation och integration
 

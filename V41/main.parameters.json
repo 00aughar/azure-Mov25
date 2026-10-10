@@ -18,7 +18,7 @@
     "adminUsername": { "value": "azureuser" },
     "sshPublicKey": { "value": "FYLL I FRAN TERMINAL: ssh-keygen -y -f ~/din-nyckel" },
     "cloudInitWebServer": { "value": "FYLL I FRAN TERMINAL: base64 -w 0 cloud-init-nordvik.txt" },
-    "vmSize": { "value": "Standard_D2als_v2" },
+    "vmSize": { "value": "Standard_B2ats_v2" },
     "vnetPrefix": { "value": "10.40.0.0/16" },
     "snetWebPrefix": { "value": "10.40.1.0/24" },
     "dokumentCoolAfterDays": { "value": 90 },
